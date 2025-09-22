@@ -1,0 +1,221 @@
+body{
+  width:100%;
+  margin:0 auto;
+}
+
+.noues_enherbees{
+  color: #515b45;
+  font-family: YACgEXR5pFE-0;
+  line-height: 1.37501031em;
+  margin-left: 28%;
+  font-size: 2.3em;
+  margin-top: -3px;
+}
+
+.services_eco{
+  color: #515b45;
+}
+
+.banniere{
+  margin-top:1%;
+  margin-left:17%;
+}
+
+.premier{
+  font-family: YACgEVg3xZg-0;
+  line-height: 1.34733901em;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: 1px;
+  font-size: 1.4em;
+  margin-left: 28%;
+  border-radius: 12px;
+  background-color: silver;
+  padding: 11px 0 2px 0;
+  margin-top: 18px;
+}
+
+.stars{
+  margin-left: 30%;
+  background-color: #cfdad4;
+  border-radius: 12px;
+  padding: 12px;
+  opacity:0.8;
+  display: grid;
+}
+
+/*.content{
+  display: flex;
+}*/
+
+/*.texte_etoile{
+  float: left;
+}*/
+
+.texte{
+  margin-left: 1%;
+  font-size: 1.1em;
+  
+}
+
+#suite
+{
+    margin:0;
+    display:none;
+}
+
+#suite2
+{
+    margin:0;
+    display:none;
+}
+
+#suite3
+{
+    margin:0;
+    display:none;
+}
+
+p{
+  margin: 0;
+}
+
+/*Div pliable/dépliable*/
+[class^="radio"] {
+  display: none;
+}
+[id^="label"]:checked + label + div {
+  display: block;
+}
+[id^="label"] + label:before {
+  content: "+";
+  cursor: pointer;
+}
+
+[id^="label"]:checked + label:before {
+  content: " - ";
+  cursor: pointer;
+}
+
+.label1, .label2, .label3, .label4, .label5, .label6, .label7, .label8{
+  display: flex;
+}
+
+.page-2-1, .page-4-1{
+  margin-left: 30%;
+  border-radius: 12px;
+  background-color: silver;
+  padding: 11px 0 12px 0;
+}
+
+.page-3-1{
+  margin-left: 30%;
+  border-radius: 12px;
+  background-color: #cfdad4;
+  padding: 11px 0 12px 0;
+  opacity:0.8;
+}
+
+.page-5-1{
+  margin-left: 30%;
+  border-radius: 12px;
+  background-color: #cfdad4;
+  padding: 11px 0 12px 0;
+}
+
+.dimensions, .sols, .vegetation, .amenagement{
+  margin-left: 2%;
+  color: #515b45;
+}
+
+.page-2-2, .page-2-3, .page-2-4, .page-2-5, .page-2-6,.page-3-1-1, .page-4-1-1, .page-4-1-2, .page-4-1-3, .page-4-1-4, .page-4-1-5, .page-5-2{
+  margin-left: 3%;
+  font-size: 1.3em;
+  font-family: YACgEVg3xZg-0;
+}
+
+.page-5-3, .page-5-4, .page-5-5, .page-5-6{
+  margin-left: 6%;
+  font-size: 1.3em;
+  font-family: YACgEVg3xZg-0; 
+}
+
+.dimensions_noue_enherbee, .enherbee_douce_cloisons{
+  margin-left: 20%;
+}
+
+.txt_dimen_noue_enherbee{
+  margin-left: 25%;
+}
+
+#img_enherbee_cloisons{
+  margin-left:5%;
+}
+
+.txt_enherbee_douce, .txt_enherbee_cloisons{
+  margin-left: 15%;
+}
+
+#img_surelevee_noue_enherbee, #img_egout_noue_enherbee{
+  width:500px;
+  margin-left: 9%;
+}
+
+#img_drain_noue_enherbee{
+  margin-left: 13%;
+}
+
+.txt_surelevee_noue_enherbee{
+  margin-left: 22%;
+}
+
+.txt_egout_noue_enherbee, .txt_cloison_noue_enherbee{
+  margin-left: 24%;
+}
+
+.txt_sch_drain_noue_enherbee{
+  margin-left: 26%;
+}
+
+.ancres{
+  display: grid;
+  margin-left: 10%;
+  margin-top: -11%;
+  width: 116px;
+  font-size: 1.2em;
+  position: fixed;
+}
+
+.ancres a{
+  color:#515b45;
+  font-family: YACgEVg3xZg-0;
+}
+
+.modal-body{
+  overflow: auto;
+  max-height: 935px;
+}
+
+@media only screen  and (max-width:1000px){
+  .ancres{
+    margin-top: 0;
+    margin-left: 0;
+  }
+}
+/*#page-1{
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  align-items: center;
+  grid-template-columns: auto 100rem auto;
+  z-index: 0;
+  margin-top: -1px;
+}
+
+.page-1-1{
+  grid-area: 1 / 1 / 2 / 4;
+  display: grid;
+  position: absolute;
+  min-height: 100%;
+  min-width: 100%;
+}*/
