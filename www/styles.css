@@ -1,10 +1,21 @@
-.container-fluid{
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.container-fluid {
   padding-left: 0 !important;
   padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 .navbar-default {
   height: 120px;
+}
+
+.navbar-toggle{
+display: none;  
 }
 
 .conteneur_logo{
@@ -27,3 +38,315 @@
   padding: inherit !important;
   margin-top: -20px;
 }
+
+.mise_en_page{
+  margin-left: 11%;
+  margin-right: 11% !important;
+  border: 1px solid #f6f3f3;
+  padding-left: 4%;
+  padding-right: 4%;
+  width: auto;
+  opacity: 1;
+  float: inherit;
+}
+
+h4 {
+  font-weight: bold;
+  font-size: 1.8rem;
+  color: #293574;
+}
+
+.col-sm-12{
+  padding-left: inherit !important;
+  padding-right: inherit !important;
+}
+
+
+.question-block {
+  margin: 20px 0;
+  padding: 15px;
+  margin-left: 4%;
+  margin-right: 4%;
+  /*background-color: #f9f9f9;
+  border-radius: 6px;*/
+}
+
+
+
+.custom-radio input[type="radio"] {
+  display: none;
+}
+
+.custom-radio label {
+  display: inline-block;
+  padding: 6px 12px;
+  margin: 4px 8px 4px 0;
+  border: 2px solid rgba(239,119,87,1);
+  border-radius: 20px;
+  background-color: #fff;
+  color: #293574;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-radio input[type="radio"]:checked + label {
+  background-color: rgba(239,119,87,1);
+  color: white;
+}
+
+textarea{
+  resize:none;
+  border: 2px solid rgba(239,119,87,1);
+  border-radius: 8px;
+}
+
+.custom-checkbox input[type="checkbox"]:checked + label{
+  color: rgba(239,119,87,1);
+}
+
+.custom-checkbox input[type="checkbox"]{
+  width: 18px;
+  height: 18px;
+  appearance: none;
+  border: 2px solid rgba(239,119,87,1) !important;
+  border-radius: 4px;
+  cursor: pointer;
+  vertical-align: middle;
+  position: relative;
+  bottom: 2px;
+}
+
+.custom-checkbox input[type="checkbox"]:checked::before {
+  content: "✓";
+  color: white;
+  font-size: 13px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(239,119,87,1) !important;
+  width: inherit;
+  height: inherit;
+  border-radius: 6px;
+  text-align: center;
+  bottom: 25px;
+}
+
+/*.dots {
+  display: flex;
+  gap: 5px; 
+  margin: 0 auto; 
+}*/
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #c0c1ba;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.dot.active {
+  background-color: #EF7757;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  /*margin-left: 8px;*/
+  opacity: 1 !important;
+  border-radius: 50%;
+  border: 2px solid #EF7757;
+  width: 20px;
+  color: #EF7757;
+  text-align: center;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 280px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* on garde l’alignement en haut */
+  gap: 40px;
+  margin: 0 5%;
+}
+
+.left-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 40px; /* espace entre les blocs */
+}
+
+.info-block {
+  display: flex;
+  align-items: center;
+}
+
+.info-block img {
+  width: 120px;
+  margin-right: 15px;
+}
+
+.info-text {
+  margin-left: 20px;
+  max-width: 600px;
+}
+
+.right-column {
+  flex: 1;
+  display: flex;
+  /*justify-content: center;*/
+  /* 🔑 décalage pour viser le 2ᵉ bloc */
+  align-self: center; /* aligne verticalement au milieu de la colonne gauche */
+  margin-top: 90px;   /* ajuste la valeur selon la hauteur de ton premier bloc */
+}
+
+.right-column img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.info-text h3 {
+      margin: 0;
+      font-weight: bold;
+      font-size: x-large;
+    }
+
+    .info-text h4 {
+      margin-top: 8px;
+      font-weight: normal;
+      font-size: 1.9rem;
+      opacity: 0.9;
+      color: #40424d;
+    }
+    
+@keyframes bounce {
+  0%   { transform: translateY(0); }
+  30%  { transform: translateY(-8px); }
+  50%  { transform: translateY(0); }
+  70%  { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+.btn-bounce:hover {
+  animation: bounce 0.6s ease;
+}
+
+.shiny-bound-input {
+  background: none;
+  border-color: inherit;
+  border-top-color: inherit;
+}
+
+
+
+/* Masquage par classe pour le bloc conditionnel (q5a) - plus souple */
+.conditional {
+    display: none;
+}
+
+
+.progress-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin: 30px 0;
+  padding: 0 2%;
+}
+
+.progress-item {
+  margin-bottom: 3px;
+}
+
+.progress-item .circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  line-height: 32px;
+  text-align: center;
+  font-weight: bold;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.progress-item .label {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #999;
+}
+
+/* État actif */
+.progress-item.active .circle {
+  background-color: #ef7757;
+}
+.progress-item.active .label {
+  color: #ef7757;
+}
+
+/* État complété */
+.progress-item.completed .circle {
+  background-color: #293574;
+}
+.progress-item.completed .label {
+  color: #293574;
+}
+
+/* État en attente */
+.progress-item.pending .circle {
+  background-color: #ccc;
+}
+.progress-item.pending .label {
+  color: #ccc;
+}
+
+#progress-bar {
+  width: auto;
+  margin: 0;
+  padding: 0 2%;
+  box-sizing: border-box;
+  display: flex;
+  box-shadow: none;
+  background-color: inherit;
+}
+
+
+.dots {
+  display: block;
+  margin: 0 auto; /* centre horizontalement */
+}
+
+
+/*.modal-content {
+  border-bottom-width: 1px;
+  border-color: rgba(101, 147, 220, 0.5);
+  border-left-width: 1px;
+  border-right-width: 1px;
+  border-style: solid;
+  border-top-width: 1px;
+  box-shadow: rgba(101, 147, 220, 0.2) 0px 4px 8px 0px;
+  opacity: 1;
+  border-radius: 8px;
+}*/
