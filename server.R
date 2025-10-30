@@ -3,6 +3,19 @@ server <- function(input, output, session) {
   completed_themes <- reactiveVal(character())  # stocke les noms des thèmes complétés
   answers <- reactiveValues()
   
+  safe_id <- function(x) {
+    x %>%
+      iconv(to = "ASCII//TRANSLIT") %>%  # enlever les accents
+      gsub("[^a-zA-Z0-9]", "_", .) %>%    # remplacer tout sauf lettres/chiffres par "_"
+      gsub("_+", "_", .) %>%              # réduire les "_" multiples
+      trimws()
+  }
+  
+  
+  # themes <- questions_list %>%
+  #   pull(Theme) %>%
+  #   unique()
+  
   generateProgressBar <- function(all_themes, current_theme, completed_themes) {
     tags$div(
       id = "progress-bar",
@@ -419,7 +432,7 @@ server <- function(input, output, session) {
             )
           } else {
             actionButton(
-              paste0("next_", p), "Suivant >",
+              inputId = safe_id(paste0("next_", p)), "Suivant >",
               style = "background-color:#ef7757;color:white;border:none;
                      padding:10px 20px;border-radius:6px;font-size:1.6rem;"
             )
@@ -553,7 +566,7 @@ server <- function(input, output, session) {
   ##### Partie ObserveEvent ####
   observe({
     lapply(themes, function(th) {
-      observeEvent(input[[paste0("next_", th)]], {
+      observeEvent(input[[safe_id(paste0("next_", th))]], {
          #current_index <- which(themes == th)
         
         # ✅ Vérifier les champs obligatoires du thème courant
