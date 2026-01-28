@@ -1,0 +1,10 @@
+name: questionnaire_pqna_region
+title:
+username: tdb-inondation-vienne-clain-beta
+account: tdb-inondation-vienne-clain-beta
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 15917291
+bundleId: 11505835
+url: https://applis-web.shinyapps.io/questionnaire_pqna_region/
+version: 1
