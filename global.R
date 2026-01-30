@@ -7,6 +7,7 @@ library(gtools)
 library(rsconnect)
 library(purrr)
 library(writexl)
+library(echarts4r)
 
 questions_list <- read_excel("data/question_autodiag_v27012026.xlsx") %>%
   rename_with(~ gsub("é", "e", .x)) %>%      
@@ -24,13 +25,14 @@ questions_list <- read_excel("data/question_autodiag_v27012026.xlsx") %>%
     Remplace  = as.character(Remplace),
     Choix = as.character(Choix),
     Section = as.character(Section),
+    Score = as.character(Score),
     Note = as.character(Note),
     Observation = as.character(Observation)
   ) %>%
   filter(!is.na(Questions), !is.na(Theme), !is.na(Numero)) %>%
   
   # on regroupe mais on garde les réponses "plates"
-  group_by(Theme, Numero, Parent, Questions, Style, Condition, TexteTheme, Affichage, Remplace, Choix, Section, Note, Observation) %>%
+  group_by(Theme, Numero, Parent, Questions, Style, Condition, TexteTheme, Affichage, Remplace, Choix, Section, Note, Observation, Score) %>%
   summarise(Reponses = paste(Reponses, collapse = ";"), .groups = "drop") %>%
   
   # on transforme en vecteurs propres
@@ -49,3 +51,5 @@ questions_list <- read_excel("data/question_autodiag_v27012026.xlsx") %>%
 themes <- questions_list %>%
   pull(Theme) %>%
   unique()
+
+themes_map <- questions_list %>% select(Numero, Theme) %>% mutate(js = sprintf("themeMap['q%s'] = '%s';", Numero, Theme)) %>% pull(js)

@@ -6,7 +6,9 @@ ui <- fluidPage(
               tags$script(src = "getAnswer.js"),
               tags$script(src = "updateConditionals.js"),
               tags$script(src = "initConditionals.js"),
-              tags$script(src = "change_in_input.js")
+              tags$script(src = "change_in_input.js"),
+              tags$script(src = "score.js"),
+              tags$script(HTML(paste0("var themeMap = {};\n", paste(themes_map, collapse="\n"))))
    ),
 
   navbarPage(
@@ -14,12 +16,12 @@ ui <- fluidPage(
     fluid = TRUE,
     title = div(
       div(
-        tags$a(href = "https://www.service-public.fr/", target = '_blank',
-               tags$img(id = "img1", title = "Etat", src = "Republique-francaise.png", height = 80,
-                        style = "top:20px;margin-left: 15px;  margin-right:5px;")),
+        # tags$a(href = "https://www.service-public.fr/", target = '_blank',
+        #        tags$img(id = "img1", title = "Etat", src = "Republique-francaise.png", height = 80,
+        #                 style = "top:20px;margin-left: 15px;  margin-right:5px;")),
         tags$a(href = "https://www.nouvelle-aquitaine.fr/", target = '_blank',
                tags$img(id = "img1", title = "Région Nouvelle Aquitaine", src = "region-nouvelle-aquitaine_logo.jpg", height = 80,
-                        style = "top:20px; margin-left: -15px;")),
+                        style = "top:20px; margin-left: 20px;")),
         tags$a(href = "https://pqn-a.fr/fr", target = '_blank',
                tags$img(id = "img1", title = "PQNA", src = "logo_pqna.png", height = 60,
                         style = "top:20px; margin-left: 0;  margin-right:0;"))

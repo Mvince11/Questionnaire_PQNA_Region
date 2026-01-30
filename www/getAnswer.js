@@ -25,11 +25,21 @@ function getAnswer(qid) {
   }
 
   const raw = localStorage.getItem(qid);
-  if (!raw) return "";
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(normalize) : normalize(parsed);
-  } catch {
-    return normalize(raw);
+if (!raw) return "";
+
+try {
+  const parsed = JSON.parse(raw);
+
+  // 👉 Si c’est un objet {value, score}, on le renvoie tel quel
+  if (parsed && typeof parsed === "object" && "value" in parsed) {
+    return parsed;  // {value: "...", score: X}
   }
+
+  // 👉 Sinon ancien format
+  return Array.isArray(parsed) ? parsed.map(normalize) : normalize(parsed);
+
+} catch {
+  return normalize(raw);
+}
+
 }

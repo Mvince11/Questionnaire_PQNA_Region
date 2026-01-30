@@ -1,4 +1,4 @@
-console.log = function () {};
+//console.log = function () {};
 
 console.log("🚀 initConditionals.js chargé");
 
@@ -22,17 +22,26 @@ function bindLiveConditionalTriggers() {
 function bindAnswerStorage() {
   document.addEventListener("change", function (e) {
     if (!e.target.name) return;
+
     let value;
+
     if (e.target.type === "checkbox") {
       const all = document.querySelectorAll(`input[type="checkbox"][name="${e.target.name}"]`);
       value = Array.from(all).filter(c => c.checked).map(c => c.value);
     } else {
       value = e.target.value;
     }
-    localStorage.setItem(e.target.name, JSON.stringify(value));
+
+    // 👉 On stocke la valeur dans une clé séparée
+    localStorage.setItem(e.target.name + "_value_only", JSON.stringify(value));
+
+    // 👉 On NE touche PAS à la clé principale (qid)
+    //    qui contient {value, score}
+
     updateConditionals();
   });
 }
+
 
 function watchUiContainer(id) {
   const tryAttachObserver = () => {

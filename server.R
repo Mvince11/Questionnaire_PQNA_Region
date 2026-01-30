@@ -259,6 +259,11 @@ server <- function(input, output, session) {
               remplace <- if ("Remplace" %in% names(q)) q$Remplace else NA
               is_replacement <<- !is.na(remplace) && nzchar(remplace)
               reponses <- q$reponses[[1]]
+              scores <- if ("Note" %in% names(q) && !is.na(q$Note) && nzchar(q$Note)) {
+                as.numeric(unlist(strsplit(gsub("-", "NA", as.character(q$Note)), ";")))
+              } else {
+                rep(0, length(reponses))
+              }
               has_parent <- !is.na(parent_col) && parent_col != "" && parent_col != "NA"
               is_replaced <- numero %in% theme_questions$Remplace
               is_conditional <- has_parent
@@ -304,7 +309,7 @@ server <- function(input, output, session) {
                              class = "custom-radio", style = "display:contents;",
                              tags$input(
                                type = "radio", id = id, name = paste0("q", numero),is_required = is_required,
-                               value = val, required = if (j == 1) NA else NULL
+                               value = val,`data-score` = scores[j], required = if (j == 1) NA else NULL
                              ),
                              tags$label(`for` = id, val)
                            )
@@ -346,7 +351,7 @@ server <- function(input, output, session) {
                        ),
                        "textarea" = tags$textarea(
                          name = paste0("q", numero),id = paste0("q", numero), rows = 4, cols = 50, required = NA,is_required = is_required,
-                         style = "width:100%; margin-top:6px; color:#293574; font-weight:bold; opacity:0.9;border:2px solid rgba(239,119,87,1);"
+                         style = "width:100%; margin-top:6px; color:#293574; font-weight:bold; opacity:0.9;border:2px solid rgba(239,119,87,1);height:200px;"
                        ),
                        "textarea-alt" = tags$textarea(
                          name = paste0("q", numero),id = paste0("q", numero), rows = 4, cols = 50, required = NA,is_required = is_required,
@@ -630,13 +635,42 @@ server <- function(input, output, session) {
     completed_themes(c(completed_themes(), th))
     
     reponses_df <- questions_list %>%
-      mutate(Reponse = sapply(Numero, function(id) {
-        val <- input[[paste0("q", id)]]
-        if (is.null(val)) return("")
-        if (is.atomic(val)) return(paste(val, collapse = ", "))
-        return(as.character(val))
-      })) %>%
-      select(Numero, Questions, Reponse)%>%
+      mutate(
+        Reponse = sapply(Numero, function(id) {
+          val <- input[[paste0("q", id)]]
+          if (is.null(val)) return("")
+          if (is.atomic(val)) return(paste(val, collapse = ", "))
+          return(as.character(val))
+        }),
+        Score = sapply(Numero, function(id) {
+          val <- input[[paste0("q", id)]]
+          if (is.null(val)) return(NA)
+          
+          q <- questions_list[questions_list$Numero == id, ]
+          
+          # 👉 On utilise UNIQUEMENT la colonne Note
+          col <- q$Note
+          
+          # 👉 On convertit en vecteur numérique
+          notes <- suppressWarnings(as.numeric(unlist(strsplit(col, ";"))))
+          notes[notes < 0] <- NA   # remplace "-" par NA
+          
+          # 👉 Cas radio : une seule réponse
+          if (q$Style == "radio") {
+            idx <- match(val, q$reponses[[1]])
+            return(notes[idx])
+          }
+          
+          # 👉 Cas checkbox : plusieurs réponses → somme des notes
+          if (q$Style == "checkbox") {
+            idx <- match(val, q$reponses[[1]])
+            return(sum(notes[idx], na.rm = TRUE))
+          }
+          
+          return(NA)
+        })
+      ) %>%
+      select(Numero, Questions, Reponse, Score)%>%
       filter(!(Reponse %in% c("", "Sélectionner…", "Sélectionner...")))
     
     
@@ -688,4 +722,81 @@ server <- function(input, output, session) {
       )
     ))
   })
+
+  
+  observeEvent(input$submit, {
+    scores <- input$scores_par_theme
+    if (is.null(scores)) return()
+    
+    df <- data.frame(
+      theme = names(scores),
+      value = unlist(scores)
+    )
+    
+    showModal(
+      modalDialog(
+        tags$div(class="kiviat",
+          style = "
+        width: 95vw;
+        height: 90vh;
+        padding: 0;
+        margin: 0;
+      ",
+          echarts4r::echarts4rOutput(
+            "kiviat",
+            height = "100%",
+            width = "100%"
+          )
+        ),
+        size = "l",
+        easyClose = TRUE,
+        footer = NULL
+      )
+    )
+    
+    
+    output$kiviat <- echarts4r::renderEcharts4r({
+      df %>%
+        e_charts(theme) %>%
+        e_radar(value, max = 30) %>%
+        e_title("Score par thème") %>%
+        e_tooltip()
+    })
+  })
+  
+  
+  
+
+#   scores_reactifs <- reactive({
+#     questions_list %>% mutate(
+#       Score = sapply(Numero, function(id) {
+#         
+#         val <- input[[paste0("q", id)]]
+#         
+#         # 🔍 Message de debug
+#         message("Question ", id, " → valeur reçue = ", val)
+#         
+#         if (is.null(val)) return(NA)
+#         
+#         q <- questions_list[questions_list$Numero == id, ]
+#         
+#         notes <- suppressWarnings(as.numeric(unlist(strsplit(q$Note, ";"))))
+#         notes[notes < 0] <- NA
+#         
+#         idx <- match(val, q$reponses[[1]])
+#         score <- notes[idx]
+#         
+#         # 🔍 Message de debug pour le score
+#         message("Question ", id, " → score calculé = ", score)
+#         
+#         return(score)
+#       })
+#     )
+#   })
+# 
+# observe({
+#   df <- scores_reactifs()
+# })
+
+  
 }

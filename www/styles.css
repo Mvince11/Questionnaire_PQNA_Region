@@ -338,6 +338,20 @@ textarea{
   margin: 0 auto; /* centre horizontalement */
 }
 
+  .modal-dialog {
+    max-width: 98vw !important;
+    width: 98vw !important;
+  }
+  .modal-body {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+.modal-backdrop {
+    backdrop-filter: blur(8px);
+    background-color: rgba(0,0,0,0.4) !important;
+  }
+
 
 /*.modal-content {
   border-bottom-width: 1px;
