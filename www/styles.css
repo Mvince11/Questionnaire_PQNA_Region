@@ -338,7 +338,14 @@ textarea{
   margin: 0 auto; /* centre horizontalement */
 }
 
-  .modal-dialog {
+.navbar-nav {
+    display: none !important;
+  }
+  .navbar-default .navbar-brand {
+    margin-left: 20px;
+  }
+
+  /*.modal-dialog {
     max-width: 98vw !important;
     width: 98vw !important;
   }
@@ -350,7 +357,7 @@ textarea{
 .modal-backdrop {
     backdrop-filter: blur(8px);
     background-color: rgba(0,0,0,0.4) !important;
-  }
+  }*/
 
 
 /*.modal-content {

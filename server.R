@@ -733,70 +733,140 @@ server <- function(input, output, session) {
       value = unlist(scores)
     )
     
-    showModal(
-      modalDialog(
-        tags$div(class="kiviat",
-          style = "
-        width: 95vw;
-        height: 90vh;
-        padding: 0;
-        margin: 0;
-      ",
-          echarts4r::echarts4rOutput(
-            "kiviat",
-            height = "100%",
-            width = "100%"
-          )
-        ),
-        size = "l",
-        easyClose = TRUE,
-        footer = NULL
-      )
-    )
-    
-    
     output$kiviat <- echarts4r::renderEcharts4r({
       df %>%
         e_charts(theme) %>%
-        e_radar(value, max = 30) %>%
-        e_title("Score par thème") %>%
+        e_radar(value, max = 30,
+                areaStyle = list(opacity = 0.25),
+                lineStyle = list(width = 3, color = "#0055A4")) %>%
+        e_text_style(
+          color = "black",
+          fontStyle = "italic"
+        ) %>%
+        e_theme("chalk") %>%
+        e_theme_custom('{"color":["#ff715e","#ffaf51"]}')%>%
+        #e_title("Score par thème")%>%
+        e_legend(show = FALSE)%>%
+        e_radar_opts(
+          axisNameGap = 6,
+          axisName = list(
+            color = "black",
+            fontFamily = "Libre Franklin",
+            fontSize = 18,
+            formatter = htmlwidgets::JS("
+      function (value) {
+        var max = 30; // longueur max avant coupure
+        if (value.length <= max) {
+          return value;
+        }
+        
+        // Cherche le dernier espace avant la limite
+        var idx = value.lastIndexOf(' ', max);
+        
+        // Si aucun espace trouvé, coupe brutalement
+        if (idx === -1) {
+          return value.substring(0, max) + '\\n' + value.substring(max);
+        }
+        
+        // Coupe proprement sur l'espace
+        return value.substring(0, idx) + '\\n' + value.substring(idx + 1);
+      }
+    ")
+          )
+        ) %>%
         e_tooltip()
     })
+    
+    updateTabsetPanel(session, "tabs", selected = "Résultats")
+    shinyjs::hide("footer-dots-container")
   })
   
-  
-  
+  output$resultat_ui<- renderUI({
+    tagList(
+      tags$head(
+      tags$script(HTML(
+        "radarFontSize = () => {    /* for plot labels */
+        let width = document.getElementById('radar').offsetWidth;
+        let nfs = Math.max(Math.round(width / 45), 6);                  /* never less than 6 */
+        return nfs;
+      }
+      
+      legFontSize = () => {    /* for legend labels */
+        let width = document.getElementById('radar').offsetWidth; /* width determins font size*/
+        let nfs = Math.max(Math.round(width / 50), 6);                  /* never less than 6 */
+        return nfs
+      }
 
-#   scores_reactifs <- reactive({
-#     questions_list %>% mutate(
-#       Score = sapply(Numero, function(id) {
-#         
-#         val <- input[[paste0("q", id)]]
-#         
-#         # 🔍 Message de debug
-#         message("Question ", id, " → valeur reçue = ", val)
-#         
-#         if (is.null(val)) return(NA)
-#         
-#         q <- questions_list[questions_list$Numero == id, ]
-#         
-#         notes <- suppressWarnings(as.numeric(unlist(strsplit(q$Note, ";"))))
-#         notes[notes < 0] <- NA
-#         
-#         idx <- match(val, q$reponses[[1]])
-#         score <- notes[idx]
-#         
-#         # 🔍 Message de debug pour le score
-#         message("Question ", id, " → score calculé = ", score)
-#         
-#         return(score)
-#       })
-#     )
-#   })
-# 
-# observe({
-#   df <- scores_reactifs()
-# })
-
+      setTimeout(function() {
+             /* 'radar' here is from the name assigned in echarts4rOutput in the UI */
+        e = echarts.getInstanceById(radar.getAttribute('_echarts_instance_'));
+        w = document.getElementById('radar').offsetWidth * .9;
+        e.resize({width: w, height: Math.round(w * 3/5)});             /* resize on render */
+      
+        window.onresize = () => {                                      /* resize on resize */
+          w = document.getElementById('radar').offsetWidth * .9;
+          e.resize({width: w, height: Math.round(w * .65)});           /* fit in your hole */
+          e.setOption({radar: {axisName: {fontSize: radarFontSize()}}, /* adjust plot to window */
+                       textStyle: {fontSize: legFontSize()} });
+        }
+      }, 300)") # give me a minute to load...
+      )
+    ),
+      # --- Bandeau orange ---
+      div(
+        class = "page-layout-custom",
+        style = "
+                background-color: #ef7757 !important;
+                padding-top: 5%;
+                margin-top: -2%;
+                padding-bottom: 3%;
+                font-family: 'Source Sans Pro', sans-serif;
+              ",
+    
+    # --- TITRE ---
+    tags$h2("Vos résultats", style = "margin-top:20px;
+    color:white; margin-left:10%; font-size: 2.4em; font-weight: bold;"),
+    
+    # --- TEXTE INTRO ---
+    tags$p(style = "color:white; margin-left:10%; font-size: 1.4em; margin-top: 1%; font-weight: bold;",
+      "Voici une synthèse de vos scores par thématique. 
+       Le graphique ci-dessous vous permet de visualiser vos forces 
+       et vos axes d'amélioration.",
+      style = "font-size:16px; margin-bottom:25px;"
+    )),
+    
+    # --- GRAPHIQUE ---
+    div(
+      style = "margin-left:5%; margin-right:5%;",
+      echarts4r::echarts4rOutput("kiviat", height = "600px")
+    ),
+    
+    # --- TEXTE D'INTERPRÉTATION ---
+    tags$div(style="background-color:gainsboro; padding-top:15px; padding-bottom: 37px;",
+    tags$h3("Interprétation des résultats", style = "margin-left:10%; margin-right:10%; margin-top:40px; font-weight:600;"),
+    tags$p(
+      "Chaque axe représente une thématique évaluée. 
+       Plus la surface est étendue, plus votre niveau de maturité est élevé. 
+       Une zone plus réduite indique un besoin d'amélioration.",
+      style = "font-size:15px;margin-left:10%; margin-right:10%;"
+    ),
+    
+    # --- BLOC CONSEILS ---
+    tags$div(style = "margin-left:10%; margin-right:10%;",
+      style = "
+        background:#f7f7f7;
+        padding:20px;
+        border-radius:8px;
+        margin-top:25px;
+        border-left:5px solid #0055A4;",
+      tags$h4("Conseils personnalisés", style="font-weight:600;"),
+      tags$p(
+        "En fonction de vos scores, nous vous recommandons d'examiner 
+         les thématiques les plus faibles afin d'identifier des pistes d'amélioration."
+      )
+    )
+    )
+    )
+  })
   
 }
