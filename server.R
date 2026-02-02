@@ -65,21 +65,21 @@ server <- function(input, output, session) {
               ",
           div(
             style = "color:white; margin-left:10%; font-size: 2.4em; margin-top: 1%; font-weight: bold;",
-            "Diagnostic Flash"
+            "Auto-Diagnostic des transitions"
           ),
           div(
             style = "color:white; margin-left:10%; font-size: 2.1em; font-weight: bold; margin-top:1%;",
-            '"Transition et adaptation au changement climatique"'
+            '"Réaliser un état des lieux de la maturité de votre territoire face aux enjeux de transition."'
           ),
-          tags$br(),
-          div(
-            style = "color:white; margin-left:10%; font-size: 1.8em; font-weight: bold; margin-bottom: 0.5%; margin-top: 2%;",
-            "Préparez l'entretien d'échanges avec votre référent Cerema en établissant un état des lieux"
-          ),
-          div(
-            style = "color:white; margin-left:10%; font-size: 1.8em; font-weight: bold; margin-top: -9px;",
-            "des forces et des besoins de votre territoire."
-          ),
+           tags$br(),
+          # div(
+          #   style = "color:white; margin-left:10%; font-size: 1.8em; font-weight: bold; margin-bottom: 0.5%; margin-top: 2%;",
+          #   "Préparez l'entretien d'échanges avec votre référent Cerema en établissant un état des lieux"
+          # ),
+          # div(
+          #   style = "color:white; margin-left:10%; font-size: 1.8em; font-weight: bold; margin-top: -9px;",
+          #   "des forces et des besoins de votre territoire."
+          # ),
           actionButton(
             "next_btn", "Commencer",
             class = "btn btn-bounce",
@@ -110,8 +110,9 @@ server <- function(input, output, session) {
               tags$img(src = "main_pomme.png", alt = "Pomme", style = "width:120px; margin-right:15px;"),
               div(
                 class = "info-text",
-                tags$h3("Disposer d'un état des lieux"),
-                tags$h4("Répondez à quelques questions et recevez votre rapport avec un premier niveau de recommandations du Cerema.")
+                tags$h3("Objectiver la situation de votre territoire"),
+                tags$h4("À travers un questionnaire simple et synthétique, identifiez les pratiques déjà engagées et
+                        les points de vigilance à l’échelle de votre territoire de contractualisation")
               )
             ),
             div(
@@ -119,8 +120,11 @@ server <- function(input, output, session) {
               tags$img(src = "cible.png", alt = "Cible", style = "width:120px; margin-right:15px;"),
               div(
                 class = "info-text",
-                tags$h3("Déterminer vos priorités"),
-                tags$h4("Sur la base de ce rapport, établissez vos priorités d'actions et définissez, avec votre référent Cerema, les solutions mobilisables.")
+                tags$h3("Hiérarchiser vos priorités d’action"),
+                tags$h4("Cet état des lieux vous permettra de définir des priorités et d’engager un dialogue
+                        constructif avec votre chargé de mission territorial et l'ensemble
+                        de la gouvernance du territoire de contractualisation, afin d’adapter les leviers
+                        d’intervention aux spécificités locales.")
               )
             ),
             div(
@@ -128,8 +132,10 @@ server <- function(input, output, session) {
               tags$img(src = "ecran.png", alt = "Écran", style = "width:120px; margin-right:15px;"),
               div(
                 class = "info-text",
-                tags$h3("Faciliter le passage à l'action"),
-                tags$h4("Bénéficiez, par thématique, d'une boîte à outils et de retours d'expériences inspirants.")
+                tags$h3("Accompagner le passage à l’action"),
+                tags$h4("Véritable outil d’animation et de coopération, l’auto-diagnostic alimentera
+                        la réflexion collective et soutiendra l’évolution des projets de territoire
+                        en cohérence avec les enjeux de transition.")
               )
             )
           ),
@@ -705,22 +711,22 @@ server <- function(input, output, session) {
       path = paste0("Reponses/reponses_", nom, "_", prenom, "_", horodatage, ".xlsx")
     )
     
-    showModal(modalDialog(
-      title = div(
-        icon("check-circle"), 
-        span("Réponses enregistrées", style = "color:#2E7D32; font-weight:bold; font-size:1.4rem;")
-      ),
-      div(
-        style = "font-size:1.2rem; color:#293574; margin-top:10px;",
-        HTML(paste0( "Merci <strong>", genre, " ", nom, " ", prenom, "</strong>, vos réponses ont bien été enregistrées.<br><br>",
-                     "Nous allons passer à la fiche de synthèse." ))
-      ),
-      easyClose = TRUE,
-      footer = tagList(
-        modalButton("Fermer"),
-        actionButton("continuer", "Continuer", class = "btn-success")
-      )
-    ))
+    # showModal(modalDialog(
+    #   title = div(
+    #     icon("check-circle"), 
+    #     span("Réponses enregistrées", style = "color:#2E7D32; font-weight:bold; font-size:1.4rem;")
+    #   ),
+    #   div(
+    #     style = "font-size:1.2rem; color:#293574; margin-top:10px;",
+    #     HTML(paste0( "Merci <strong>", genre, " ", nom, " ", prenom, "</strong>, vos réponses ont bien été enregistrées.<br><br>",
+    #                  "Nous allons passer à la fiche de synthèse." ))
+    #   ),
+    #   easyClose = TRUE,
+    #   footer = tagList(
+    #     modalButton("Fermer"),
+    #     actionButton("continuer", "Continuer", class = "btn-success")
+    #   )
+    # ))
   })
 
   
@@ -733,12 +739,15 @@ server <- function(input, output, session) {
       value = unlist(scores)
     )
     
+    df$value <- round(df$value / 30 * 100, 1) # conversion en %
+    
     output$kiviat <- echarts4r::renderEcharts4r({
       df %>%
         e_charts(theme) %>%
-        e_radar(value, max = 30,
-                areaStyle = list(opacity = 0.25),
-                lineStyle = list(width = 3, color = "#0055A4")) %>%
+        e_radar( value, max = 100,
+                 areaStyle = list(opacity = 0.25),
+                 lineStyle = list(width = 3, color = "#0055A4")
+                 ) %>%
         e_text_style(
           color = "black",
           fontStyle = "italic"
@@ -829,7 +838,7 @@ server <- function(input, output, session) {
     
     # --- TEXTE INTRO ---
     tags$p(style = "color:white; margin-left:10%; font-size: 1.4em; margin-top: 1%; font-weight: bold;",
-      "Voici une synthèse de vos scores par thématique. 
+      "Voici une synthèse de vos scores par ambition. 
        Le graphique ci-dessous vous permet de visualiser vos forces 
        et vos axes d'amélioration.",
       style = "font-size:16px; margin-bottom:25px;"
@@ -845,7 +854,7 @@ server <- function(input, output, session) {
     tags$div(style="background-color:gainsboro; padding-top:15px; padding-bottom: 37px;",
     tags$h3("Interprétation des résultats", style = "margin-left:10%; margin-right:10%; margin-top:40px; font-weight:600;"),
     tags$p(
-      "Chaque axe représente une thématique évaluée. 
+      "Chaque axe représente une ambition Néo-Terra évaluée. 
        Plus la surface est étendue, plus votre niveau de maturité est élevé. 
        Une zone plus réduite indique un besoin d'amélioration.",
       style = "font-size:15px;margin-left:10%; margin-right:10%;"
@@ -862,7 +871,7 @@ server <- function(input, output, session) {
       tags$h4("Conseils personnalisés", style="font-weight:600;"),
       tags$p(
         "En fonction de vos scores, nous vous recommandons d'examiner 
-         les thématiques les plus faibles afin d'identifier des pistes d'amélioration."
+         les ambitions les plus faibles afin d'identifier des pistes d'amélioration."
       )
     )
     )
