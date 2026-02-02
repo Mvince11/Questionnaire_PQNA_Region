@@ -144,7 +144,7 @@ server <- function(input, output, session) {
           div(
             class = "right-column",
             style = "flex:1; text-align:center;",
-            tags$img(src = "image_diag.png", alt = "Image droite", style = "max-width:100%; height:auto;")
+            tags$img(src = "Capture-1.jpg", alt = "Image droite", style = "max-width:100%; height:auto;")
           )
         ),tags$footer(
           style = "
@@ -736,91 +736,82 @@ server <- function(input, output, session) {
     
     df <- data.frame(
       theme = names(scores),
-      value = unlist(scores)
+      value = as.numeric(unlist(scores))
     )
     
-    df$value <- round(df$value / 30 * 100, 1) # conversion en %
+    df$value <- round(df$value / 30 * 100, 1)
+    df_local <- df
     
-    output$kiviat <- echarts4r::renderEcharts4r({
-      df %>%
-        e_charts(theme) %>%
-        e_radar( value, max = 100,
-                 areaStyle = list(opacity = 0.25),
-                 lineStyle = list(width = 3, color = "#0055A4")
-                 ) %>%
-        e_text_style(
-          color = "black",
-          fontStyle = "italic"
-        ) %>%
-        e_theme("chalk") %>%
-        e_theme_custom('{"color":["#ff715e","#ffaf51"]}')%>%
-        #e_title("Score par thème")%>%
-        e_legend(show = FALSE)%>%
-        e_radar_opts(
-          axisNameGap = 6,
-          axisName = list(
-            color = "black",
-            fontFamily = "Libre Franklin",
-            fontSize = 18,
-            formatter = htmlwidgets::JS("
-      function (value) {
-        var max = 30; // longueur max avant coupure
-        if (value.length <= max) {
-          return value;
-        }
-        
-        // Cherche le dernier espace avant la limite
-        var idx = value.lastIndexOf(' ', max);
-        
-        // Si aucun espace trouvé, coupe brutalement
-        if (idx === -1) {
-          return value.substring(0, max) + '\\n' + value.substring(max);
-        }
-        
-        // Coupe proprement sur l'espace
-        return value.substring(0, idx) + '\\n' + value.substring(idx + 1);
-      }
-    ")
+    output$kiviat <- renderHighchart({
+      highchart() %>%
+        hc_chart(polar = TRUE, type = "line") %>%
+        hc_xAxis(
+          categories = df$theme,
+          tickmarkPlacement = "on",
+          labels = list(
+            distance = 30,
+            padding = 10,
+            useHTML = TRUE,
+            formatter = JS("
+            function () {
+              // angle du label (0 = droite, 90 = haut, 180 = gauche, 270 = bas)
+              var angle = this.pos * (360 / this.axis.categories.length);
+      
+              // Ajustement vertical
+              if (angle > 330 || angle < 30) {
+                // Label du haut → on le pousse vers le haut
+                return '<span style=\"position:relative; font-size:12px; color:#000\">' + this.value + '</span>';
+              } else if (angle > 150 && angle < 210) {
+                // Label du bas → on le pousse vers le bas
+                return '<span style=\"position:relative; top:6px; font-size:12px; color:#000\">' + this.value + '</span>';
+              } else {
+                // Labels latéraux → pas de correction
+                return '<span style=\"font-size:12px; color:#000\">' + this.value + '</span>';
+              }
+            }
+          ")
           )
         ) %>%
-        e_tooltip()
+        # AXE RADIAL (valeurs)
+        hc_yAxis(
+          min = 0, max = 100,
+          gridLineColor = "#D0D0D0",
+          gridLineWidth = 1,
+          gridLineInterpolation = "polygon",
+          lineWidth = 0,
+          tickInterval = 20,
+          labels = list( style = list( color = "#666", fontSize = "12px" ) )
+          ) %>%
+        # SERIE
+        hc_series(
+          list(
+            name = "Score",
+            data = df$value,
+            pointPlacement = "on",
+            color = "#0055A4",
+            lineWidth = 3,
+            marker = list( enabled = TRUE, radius = 5, fillColor = "#0055A4" ) 
+            )
+          ) %>%
+        # TOOLTIP
+        hc_tooltip(
+          headerFormat = "",
+          pointFormat = "{point.category} : <b>{point.y}%</b>",
+          backgroundColor = "white",
+          borderColor = "#0055A4",
+          style = list(fontSize = "14px")
+          ) %>%
+        hc_legend(enabled = FALSE)
     })
     
     updateTabsetPanel(session, "tabs", selected = "Résultats")
     shinyjs::hide("footer-dots-container")
   })
   
+  
   output$resultat_ui<- renderUI({
     tagList(
-      tags$head(
-      tags$script(HTML(
-        "radarFontSize = () => {    /* for plot labels */
-        let width = document.getElementById('radar').offsetWidth;
-        let nfs = Math.max(Math.round(width / 45), 6);                  /* never less than 6 */
-        return nfs;
-      }
-      
-      legFontSize = () => {    /* for legend labels */
-        let width = document.getElementById('radar').offsetWidth; /* width determins font size*/
-        let nfs = Math.max(Math.round(width / 50), 6);                  /* never less than 6 */
-        return nfs
-      }
-
-      setTimeout(function() {
-             /* 'radar' here is from the name assigned in echarts4rOutput in the UI */
-        e = echarts.getInstanceById(radar.getAttribute('_echarts_instance_'));
-        w = document.getElementById('radar').offsetWidth * .9;
-        e.resize({width: w, height: Math.round(w * 3/5)});             /* resize on render */
-      
-        window.onresize = () => {                                      /* resize on resize */
-          w = document.getElementById('radar').offsetWidth * .9;
-          e.resize({width: w, height: Math.round(w * .65)});           /* fit in your hole */
-          e.setOption({radar: {axisName: {fontSize: radarFontSize()}}, /* adjust plot to window */
-                       textStyle: {fontSize: legFontSize()} });
-        }
-      }, 300)") # give me a minute to load...
-      )
-    ),
+     
       # --- Bandeau orange ---
       div(
         class = "page-layout-custom",
@@ -830,6 +821,7 @@ server <- function(input, output, session) {
                 margin-top: -2%;
                 padding-bottom: 3%;
                 font-family: 'Source Sans Pro', sans-serif;
+                margin-bottom: 36px;
               ",
     
     # --- TITRE ---
@@ -841,14 +833,15 @@ server <- function(input, output, session) {
       "Voici une synthèse de vos scores par ambition. 
        Le graphique ci-dessous vous permet de visualiser vos forces 
        et vos axes d'amélioration.",
-      style = "font-size:16px; margin-bottom:25px;"
+      style = "font-size:20px; margin-bottom:25px;"
     )),
     
     # --- GRAPHIQUE ---
     div(
-      style = "margin-left:5%; margin-right:5%;",
-      echarts4r::echarts4rOutput("kiviat", height = "600px")
+      style = "margin-left:5%; margin-right:5%; width: 100%;",
+      highchartOutput("kiviat", height = "650px")
     ),
+    tags$br(),
     
     # --- TEXTE D'INTERPRÉTATION ---
     tags$div(style="background-color:gainsboro; padding-top:15px; padding-bottom: 37px;",
