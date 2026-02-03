@@ -779,7 +779,7 @@ server <- function(input, output, session) {
           gridLineWidth = 1,
           gridLineInterpolation = "polygon",
           lineWidth = 0,
-          tickInterval = 20,
+          tickInterval = 25,
           labels = list( style = list( color = "#666", fontSize = "12px" ) )
           ) %>%
         # SERIE
@@ -806,6 +806,40 @@ server <- function(input, output, session) {
     
     updateTabsetPanel(session, "tabs", selected = "Résultats")
     shinyjs::hide("footer-dots-container")
+  })
+  
+  df_details <- reponses_df %>%
+    left_join(questions_list %>% select(Numero, Theme, Objectif), by = "Numero") %>%
+    group_by(Theme, Objectif) %>%
+    summarise(
+      score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),  # 0–3 → %
+      .groups = "drop"
+    )
+  
+  output$resultats_par_theme <- renderUI({
+    
+    blocs <- lapply(split(df_details, df_details$Theme), function(d) {
+      
+      # Titre du thème
+      titre <- sprintf(
+        "<h3 style='margin-top:30px; color:#0055A4;'>%s</h3>",
+        unique(d$Theme)
+      )
+      
+      # Objectifs + scores
+      objectifs <- paste0(
+        "<div style='margin-left:20px; font-size:16px;'>",
+        paste0(
+          "<p><b>", d$Objectif, "</b> : ", d$score_pct, "%</p>",
+          collapse = ""
+        ),
+        "</div>"
+      )
+      
+      paste0(titre, objectifs)
+    })
+    
+    HTML(paste0(blocs, collapse = ""))
   })
   
   
@@ -842,6 +876,8 @@ server <- function(input, output, session) {
       highchartOutput("kiviat", height = "650px")
     ),
     tags$br(),
+    uiOutput("resultats_par_theme"),
+    
     
     # --- TEXTE D'INTERPRÉTATION ---
     tags$div(style="background-color:gainsboro; padding-top:15px; padding-bottom: 37px;",
