@@ -15,6 +15,7 @@ questions_list <- read_excel("data/question_autodiag_v27012026.xlsx") %>%
   rename_with(trimws) %>%                   
   mutate(
     Theme      = as.character(Theme),
+    Objectif = as.character(Objectif),
     Numero     = as.character(Numero),
     Questions  = as.character(Questions),
     Style      = as.character(Style),
@@ -33,7 +34,7 @@ questions_list <- read_excel("data/question_autodiag_v27012026.xlsx") %>%
   filter(!is.na(Questions), !is.na(Theme), !is.na(Numero)) %>%
   
   # on regroupe mais on garde les réponses "plates"
-  group_by(Theme, Numero, Parent, Questions, Style, Condition, TexteTheme, Affichage, Remplace, Choix, Section, Note, Observation, Score) %>%
+  group_by(Theme, Objectif, Numero, Parent, Questions, Style, Condition, TexteTheme, Affichage, Remplace, Choix, Section, Note, Observation, Score) %>%
   summarise(Reponses = paste(Reponses, collapse = ";"), .groups = "drop") %>%
   
   # on transforme en vecteurs propres

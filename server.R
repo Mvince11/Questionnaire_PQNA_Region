@@ -2,6 +2,7 @@ server <- function(input, output, session) {
   current_page <- reactiveVal("intro")
   completed_themes <- reactiveVal(character())  # stocke les noms des thèmes complétés
   answers <- reactiveValues()
+  reponses_df_r <- reactiveVal(NULL)
   
   safe_id <- function(x) {
     x %>%
@@ -635,56 +636,49 @@ server <- function(input, output, session) {
   
 ##### Enregistre toutes les Questions et réponses dans un fichier xlsx ######  
   observeEvent(input$submit, {
-    th <- "Formulaire de contact"  # ou le nom réel du dernier thème
+    th <- "Formulaire de contact"
     if (!validate_theme(th)) return()
     
     completed_themes(c(completed_themes(), th))
     
-    reponses_df <- questions_list %>%
-      mutate(
-        Reponse = sapply(Numero, function(id) {
-          val <- input[[paste0("q", id)]]
-          if (is.null(val)) return("")
-          if (is.atomic(val)) return(paste(val, collapse = ", "))
-          return(as.character(val))
-        }),
-        Score = sapply(Numero, function(id) {
-          val <- input[[paste0("q", id)]]
-          if (is.null(val)) return(NA)
-          
-          q <- questions_list[questions_list$Numero == id, ]
-          
-          # 👉 On utilise UNIQUEMENT la colonne Note
-          col <- q$Note
-          
-          # 👉 On convertit en vecteur numérique
-          notes <- suppressWarnings(as.numeric(unlist(strsplit(col, ";"))))
-          notes[notes < 0] <- NA   # remplace "-" par NA
-          
-          # 👉 Cas radio : une seule réponse
-          if (q$Style == "radio") {
-            idx <- match(val, q$reponses[[1]])
-            return(notes[idx])
-          }
-          
-          # 👉 Cas checkbox : plusieurs réponses → somme des notes
-          if (q$Style == "checkbox") {
-            idx <- match(val, q$reponses[[1]])
-            return(sum(notes[idx], na.rm = TRUE))
-          }
-          
-          return(NA)
-        })
-      ) %>%
-      select(Numero, Questions, Reponse, Score)%>%
-      filter(!(Reponse %in% c("", "Sélectionner…", "Sélectionner...")))
+    reponses_df_r(
+      questions_list %>%
+        mutate(
+          Reponse = sapply(Numero, function(id) {
+            val <- input[[paste0("q", id)]]
+            if (is.null(val)) return("")
+            if (is.atomic(val)) return(paste(val, collapse = ", "))
+            return(as.character(val))
+          }),
+          Score = sapply(Numero, function(id) {
+            val <- input[[paste0("q", id)]]
+            if (is.null(val)) return(NA)
+            
+            q <- questions_list[questions_list$Numero == id, ]
+            notes <- suppressWarnings(as.numeric(unlist(strsplit(q$Note, ";"))))
+            notes[notes < 0] <- NA
+            
+            if (q$Style == "radio") {
+              idx <- match(val, q$reponses[[1]])
+              return(notes[idx])
+            }
+            if (q$Style == "checkbox") {
+              idx <- match(val, q$reponses[[1]])
+              return(sum(notes[idx], na.rm = TRUE))
+            }
+            return(NA)
+          })
+        ) %>%
+        select(Numero, Questions, Reponse, Score) %>%
+        filter(!(Reponse %in% c("", "Sélectionner…", "Sélectionner...")))
+    )
+  
     
-    
-    genre <- reponses_df$Reponse[reponses_df$Questions == "Civilité"]
-    nom <- reponses_df$Reponse[reponses_df$Questions == "Nom"]
-    prenom <- reponses_df$Reponse[reponses_df$Questions == "Prénom"]
-    raison_sociale <- reponses_df$Reponse[reponses_df$Questions == "Raison sociale de la collectivité (nom exact)"]
-    adresse_mail <- reponses_df$Reponse[reponses_df$Questions == "Email"]
+    genre <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Civilité"]
+    nom <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Nom"]
+    prenom <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Prénom"]
+    raison_sociale <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Raison sociale de la collectivité (nom exact)"]
+    adresse_mail <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Email"]
     
     genre          <- if (length(genre) == 0) NA else genre
     nom            <- if (length(nom) == 0) NA else nom
@@ -706,31 +700,11 @@ server <- function(input, output, session) {
     writexl::write_xlsx(
       list(
         Identite = Identite,
-        Reponses = reponses_df
+        Reponses = reponses_df_r()
       ),
       path = paste0("Reponses/reponses_", nom, "_", prenom, "_", horodatage, ".xlsx")
     )
     
-    # showModal(modalDialog(
-    #   title = div(
-    #     icon("check-circle"), 
-    #     span("Réponses enregistrées", style = "color:#2E7D32; font-weight:bold; font-size:1.4rem;")
-    #   ),
-    #   div(
-    #     style = "font-size:1.2rem; color:#293574; margin-top:10px;",
-    #     HTML(paste0( "Merci <strong>", genre, " ", nom, " ", prenom, "</strong>, vos réponses ont bien été enregistrées.<br><br>",
-    #                  "Nous allons passer à la fiche de synthèse." ))
-    #   ),
-    #   easyClose = TRUE,
-    #   footer = tagList(
-    #     modalButton("Fermer"),
-    #     actionButton("continuer", "Continuer", class = "btn-success")
-    #   )
-    # ))
-  })
-
-  
-  observeEvent(input$submit, {
     scores <- input$scores_par_theme
     if (is.null(scores)) return()
     
@@ -781,7 +755,7 @@ server <- function(input, output, session) {
           lineWidth = 0,
           tickInterval = 25,
           labels = list( style = list( color = "#666", fontSize = "12px" ) )
-          ) %>%
+        ) %>%
         # SERIE
         hc_series(
           list(
@@ -791,8 +765,8 @@ server <- function(input, output, session) {
             color = "#0055A4",
             lineWidth = 3,
             marker = list( enabled = TRUE, radius = 5, fillColor = "#0055A4" ) 
-            )
-          ) %>%
+          )
+        ) %>%
         # TOOLTIP
         hc_tooltip(
           headerFormat = "",
@@ -800,37 +774,129 @@ server <- function(input, output, session) {
           backgroundColor = "white",
           borderColor = "#0055A4",
           style = list(fontSize = "14px")
-          ) %>%
+        ) %>%
         hc_legend(enabled = FALSE)
     })
     
     updateTabsetPanel(session, "tabs", selected = "Résultats")
     shinyjs::hide("footer-dots-container")
   })
+
   
-  df_details <- reponses_df %>%
-    left_join(questions_list %>% select(Numero, Theme, Objectif), by = "Numero") %>%
-    group_by(Theme, Objectif) %>%
-    summarise(
-      score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),  # 0–3 → %
-      .groups = "drop"
-    )
+  df_details <- reactive({
+    req(reponses_df_r())
+    
+    reponses_df_r() %>%
+      left_join(questions_list %>% select(Numero, Theme, Objectif), by = "Numero") %>%
+      group_by(Theme, Objectif) %>%
+      summarise(
+        score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),
+        .groups = "drop"
+      )
+  })
+  
   
   output$resultats_par_theme <- renderUI({
+  req(df_details())
+
+  blocs <- lapply(split(df_details(), df_details()$Theme), function(d) {
+
+    titre <- sprintf(
+      "<h3 style='margin-top:30px; color:#0055A4;'>%s</h3>",
+      unique(d$Theme)
+    )
+
+    objectifs <- paste0(
+      "<div style='margin-left:20px; font-size:16px;'>",
+      paste0(
+        "<p><b>", d$Objectif, "</b> : ", d$score_pct, "%</p>",
+        collapse = ""
+      ),
+      "</div>"
+    )
+
+    paste0(titre, objectifs)
+  })
+
+  HTML(paste0(blocs, collapse = ""))
+})
+
+  
+  df_details <- reactive({
+    req(reponses_df_r())   # garantit que le DF existe
     
-    blocs <- lapply(split(df_details, df_details$Theme), function(d) {
+    reponses_df_r() %>%    # ⚠️ les parenthèses sont essentielles
+      left_join(
+        questions_list %>% select(Numero, Theme, Objectif),
+        by = "Numero"
+      ) %>%
+      group_by(Theme, Objectif) %>%
+      summarise(
+        score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),
+        .groups = "drop"
+      )
+  })
+  
+  
+  output$resultats_par_theme <- renderUI({
+    req(df_details())
+    
+    blocs <- lapply(split(df_details(), df_details()$Theme), function(d) {
       
-      # Titre du thème
+      # Titre du thème centré
       titre <- sprintf(
-        "<h3 style='margin-top:30px; color:#0055A4;'>%s</h3>",
+        "<h3 style='
+        margin-top:40px;
+        margin-bottom:15px;
+        color:#0055A4;
+        text-align:center;
+        font-weight:bold;
+        font-size:26px;
+      '>%s</h3>",
         unique(d$Theme)
       )
       
-      # Objectifs + scores
+      # Objectifs + jauges
       objectifs <- paste0(
-        "<div style='margin-left:20px; font-size:16px;'>",
+        "<div style='
+        margin:0 auto;
+        max-width:800px;
+        text-align:center;
+        font-size:18px;
+        line-height:1.7;
+        color:#293574;
+      '>",
         paste0(
-          "<p><b>", d$Objectif, "</b> : ", d$score_pct, "%</p>",
+          "<div style='
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:15px;
+            margin:8px 0;
+        '>
+            <div style='width:540px; text-align:right;'>
+              <b>", d$Objectif, "</b>
+            </div>
+
+            <div style='
+                width:150px;
+                height:10px;
+                background:#e6e6e6;
+                border-radius:5px;
+                overflow:hidden;
+            '>
+              <div style='
+                  width:", d$score_pct, "%;
+                  height:100%;
+                  background:#0055A4;
+                  border-radius:5px;
+              '></div>
+            </div>
+
+            <div style='width:50px; text-align:left;'>
+              ", d$score_pct, "%
+            </div>
+        </div>",
           collapse = ""
         ),
         "</div>"
@@ -839,8 +905,23 @@ server <- function(input, output, session) {
       paste0(titre, objectifs)
     })
     
-    HTML(paste0(blocs, collapse = ""))
+    # Conteneur global centré
+    HTML(paste0(
+      "<div style='
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      margin-top:30px;
+      margin-bottom:60px;
+    '>",
+      paste0(blocs, collapse = ""),
+      "</div>"
+    ))
   })
+  
+  
+  
   
   
   output$resultat_ui<- renderUI({
@@ -877,6 +958,7 @@ server <- function(input, output, session) {
     ),
     tags$br(),
     uiOutput("resultats_par_theme"),
+    tags$br(),
     
     
     # --- TEXTE D'INTERPRÉTATION ---
