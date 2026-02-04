@@ -70,7 +70,7 @@ server <- function(input, output, session) {
           ),
           div(
             style = "color:white; margin-left:10%; font-size: 2.1em; font-weight: bold; margin-top:1%;",
-            '"Réaliser un état des lieux de la maturité de votre territoire face aux enjeux de transition."'
+            "Réaliser un état des lieux de la maturité de votre territoire face aux enjeux de transition."
           ),
            tags$br(),
           # div(
@@ -175,6 +175,27 @@ server <- function(input, output, session) {
           )
         )
         
+      )
+    } else if (page == "login") {
+      return(
+        div(
+          style = "margin-top:8%; text-align:center; font-family:'Source Sans Pro';",
+          
+          h2("Connexion", style="color:#293574; font-weight:bold; margin-bottom:40px;"),
+          
+          div(
+            style="display:inline-block; text-align:left; width:350px;",
+            
+            textInput("login_user", "Identifiant :", placeholder = "Votre identifiant"),
+            passwordInput("login_pass", "Mot de passe :", placeholder = "Votre mot de passe"),
+            
+            actionButton(
+              "login_btn", "Se connecter",
+              style="margin-top:20px; width:100%; background-color:#ef7757; color:white;
+                 border:none; padding:10px; border-radius:6px; font-size:1.4rem;"
+            )
+          )
+        )
       )
     } else {
       
@@ -401,6 +422,7 @@ server <- function(input, output, session) {
   ##### Footer pages questions #####
   output$footer <- renderUI({
     p <- current_page()
+    if (p %in% c("intro", "login")) return(NULL) ### Empêche le footer de s'afficher sur la page login
     pos <- match(p, themes)
     
     tagList(
@@ -617,7 +639,8 @@ server <- function(input, output, session) {
   
   
   # 🔄 Navigation
-  observeEvent(input$next_btn, current_page(themes[1]))
+  #observeEvent(input$next_btn, current_page(themes[1]))
+  observeEvent(input$next_btn, current_page("login"))
   for (i in seq_along(themes[-length(themes)])) {
     observeEvent(input[[paste0("next_", themes[i])]], current_page(themes[i + 1]))
   }
@@ -633,6 +656,10 @@ server <- function(input, output, session) {
       }, ignoreInit = TRUE)
     })
   })
+  
+##########################
+#### Partie résultats ####
+##########################
   
 ##### Enregistre toutes les Questions et réponses dans un fichier xlsx ######  
   observeEvent(input$submit, {
@@ -821,7 +848,7 @@ server <- function(input, output, session) {
   HTML(paste0(blocs, collapse = ""))
 })
 
-  
+#### Variables pour résultats ambitions et objectifs ####
   df_details <- reactive({
     req(reponses_df_r())   # garantit que le DF existe
     
@@ -837,7 +864,8 @@ server <- function(input, output, session) {
       )
   })
   
-  
+ 
+#### Resultats par Ambition et Objectifs #####   
   output$resultats_par_theme <- renderUI({
     req(df_details())
     
@@ -922,7 +950,7 @@ server <- function(input, output, session) {
   
   
   
-  
+##### Page Résultats #####
   
   output$resultat_ui<- renderUI({
     tagList(
@@ -985,8 +1013,47 @@ server <- function(input, output, session) {
          les ambitions les plus faibles afin d'identifier des pistes d'amélioration."
       )
     )
-    )
+    ),
+    tags$br(),
+    tags$div(style='
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      margin-top:30px;
+      margin-bottom:60px;
+    ',
+    downloadButton("download_pdf", "Télécharger la fiche des résultats au format PDF",
+                   class = "btn btn-primary"))
+    
     )
   })
+
+  #### ObserveEvent login #####
+  observeEvent(input$login_btn, {
+    user <- input$login_user
+    pass <- input$login_pass
+    
+    if (user == "" || pass == "") {
+      showModal(modalDialog(
+        title = "Erreur",
+        "Veuillez remplir tous les champs.",
+        easyClose = TRUE
+      ))
+      return()
+    }
+    
+    # 🔐 Identifiants simples (à adapter si besoin)
+    if (user == "admin" && pass == "cerema") {
+      current_page(themes[1])   # on passe au premier thème
+    } else {
+      showModal(modalDialog(
+        title = "Connexion refusée",
+        "Identifiant ou mot de passe incorrect.",
+        easyClose = TRUE
+      ))
+    }
+  })
+  
   
 }
