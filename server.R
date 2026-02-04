@@ -3,6 +3,8 @@ server <- function(input, output, session) {
   completed_themes <- reactiveVal(character())  # stocke les noms des thèmes complétés
   answers <- reactiveValues()
   reponses_df_r <- reactiveVal(NULL)
+  radar_path <- reactiveVal(NULL)
+  
   
   safe_id <- function(x) {
     x %>%
@@ -744,6 +746,8 @@ server <- function(input, output, session) {
     df_local <- df
     
     output$kiviat <- renderHighchart({
+      
+      # --- Construction du radar (ton code existant) ---
       highchart() %>%
         hc_chart(polar = TRUE, type = "line") %>%
         hc_xAxis(
@@ -754,26 +758,19 @@ server <- function(input, output, session) {
             padding = 10,
             useHTML = TRUE,
             formatter = JS("
-            function () {
-              // angle du label (0 = droite, 90 = haut, 180 = gauche, 270 = bas)
-              var angle = this.pos * (360 / this.axis.categories.length);
-      
-              // Ajustement vertical
-              if (angle > 330 || angle < 30) {
-                // Label du haut → on le pousse vers le haut
-                return '<span style=\"position:relative; font-size:12px; color:#000\">' + this.value + '</span>';
-              } else if (angle > 150 && angle < 210) {
-                // Label du bas → on le pousse vers le bas
-                return '<span style=\"position:relative; top:6px; font-size:12px; color:#000\">' + this.value + '</span>';
-              } else {
-                // Labels latéraux → pas de correction
-                return '<span style=\"font-size:12px; color:#000\">' + this.value + '</span>';
-              }
+          function () {
+            var angle = this.pos * (360 / this.axis.categories.length);
+            if (angle > 330 || angle < 30) {
+              return '<span style=\"position:relative; font-size:12px; color:#000\">' + this.value + '</span>';
+            } else if (angle > 150 && angle < 210) {
+              return '<span style=\"position:relative; top:6px; font-size:12px; color:#000\">' + this.value + '</span>';
+            } else {
+              return '<span style=\"font-size:12px; color:#000\">' + this.value + '</span>';
             }
-          ")
+          }
+        ")
           )
         ) %>%
-        # AXE RADIAL (valeurs)
         hc_yAxis(
           min = 0, max = 100,
           gridLineColor = "#D0D0D0",
@@ -781,9 +778,8 @@ server <- function(input, output, session) {
           gridLineInterpolation = "polygon",
           lineWidth = 0,
           tickInterval = 25,
-          labels = list( style = list( color = "#666", fontSize = "12px" ) )
+          labels = list(style = list(color = "#666", fontSize = "12px"))
         ) %>%
-        # SERIE
         hc_series(
           list(
             name = "Score",
@@ -791,10 +787,9 @@ server <- function(input, output, session) {
             pointPlacement = "on",
             color = "#0055A4",
             lineWidth = 3,
-            marker = list( enabled = TRUE, radius = 5, fillColor = "#0055A4" ) 
+            marker = list(enabled = TRUE, radius = 5, fillColor = "#0055A4")
           )
         ) %>%
-        # TOOLTIP
         hc_tooltip(
           headerFormat = "",
           pointFormat = "{point.category} : <b>{point.y}%</b>",
@@ -805,22 +800,23 @@ server <- function(input, output, session) {
         hc_legend(enabled = FALSE)
     })
     
+    
     updateTabsetPanel(session, "tabs", selected = "Résultats")
     shinyjs::hide("footer-dots-container")
   })
 
   
-  df_details <- reactive({
-    req(reponses_df_r())
-    
-    reponses_df_r() %>%
-      left_join(questions_list %>% select(Numero, Theme, Objectif), by = "Numero") %>%
-      group_by(Theme, Objectif) %>%
-      summarise(
-        score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),
-        .groups = "drop"
-      )
-  })
+  # df_details <- reactive({
+  #   req(reponses_df_r())
+  #   
+  #   reponses_df_r() %>%
+  #     left_join(questions_list %>% select(Numero, Theme, Objectif), by = "Numero") %>%
+  #     group_by(Theme, Objectif) %>%
+  #     summarise(
+  #       score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),
+  #       .groups = "drop"
+  #     )
+  # })
   
   
   output$resultats_par_theme <- renderUI({
@@ -862,6 +858,26 @@ server <- function(input, output, session) {
         score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),
         .groups = "drop"
       )
+  })
+  
+  
+  identite <- reactive({
+    req(reponses_df_r())
+    df <- reponses_df_r()
+    
+    get_val <- function(q) {
+      v <- df$Reponse[df$Questions == q]
+      if (length(v) == 0) NA_character_ else v[1]
+    }
+    
+    list(
+      civilite  = get_val("Civilité"),
+      nom       = get_val("Nom"),
+      prenom    = get_val("Prénom"),
+      collectivite = get_val("Raison sociale de la collectivité (nom exact)"),
+      email     = get_val("Email"),
+      date_gen  = format(Sys.time(), "%d/%m/%Y")
+    )
   })
   
  
@@ -1055,5 +1071,99 @@ server <- function(input, output, session) {
     }
   })
   
-  
+  output$download_pdf <- downloadHandler(
+    
+    filename = function() {
+      id <- identite()
+      
+      nom <- id$nom
+      prenom <- id$prenom
+      
+      # Sécurisation
+      if (is.null(nom) || nom == "") nom <- "inconnu"
+      if (is.null(prenom) || prenom == "") prenom <- "inconnu"
+      
+      paste0("autodiagnostic_", nom, "_", prenom, "_", Sys.Date(), ".pdf") },
+    
+    content = function(file) {
+      
+      # 1. Générer le radar en HTML temporaire
+      tmp_html <- tempfile(fileext = ".html")
+      tmp_png  <- tempfile(fileext = ".png")
+      
+      hc <- highchart() %>%
+        hc_chart(polar = TRUE, type = "line") %>%
+        hc_xAxis(
+          categories = df$theme,
+          tickmarkPlacement = "on",
+          labels = list(
+            distance = 30,
+            padding = 10,
+            useHTML = TRUE,
+            formatter = JS("
+          function () {
+            var angle = this.pos * (360 / this.axis.categories.length);
+            if (angle > 330 || angle < 30) {
+              return '<span style=\"position:relative; font-size:12px; color:#000\">' + this.value + '</span>';
+            } else if (angle > 150 && angle < 210) {
+              return '<span style=\"position:relative; top:6px; font-size:12px; color:#000\">' + this.value + '</span>';
+            } else {
+              return '<span style=\"font-size:12px; color:#000\">' + this.value + '</span>';
+            }
+          }
+        ")
+          )
+        ) %>%
+        hc_yAxis(
+          min = 0, max = 100,
+          gridLineColor = "#D0D0D0",
+          gridLineWidth = 1,
+          gridLineInterpolation = "polygon",
+          lineWidth = 0,
+          tickInterval = 25,
+          labels = list(style = list(color = "#666", fontSize = "12px"))
+        ) %>%
+        hc_series(
+          list(
+            name = "Score",
+            data = df$value,
+            pointPlacement = "on",
+            color = "#0055A4",
+            lineWidth = 3,
+            marker = list(enabled = TRUE, radius = 5, fillColor = "#0055A4")
+          )
+        ) %>%
+        hc_tooltip(
+          headerFormat = "",
+          pointFormat = "{point.category} : <b>{point.y}%</b>",
+          backgroundColor = "white",
+          borderColor = "#0055A4",
+          style = list(fontSize = "14px")
+        ) %>%
+        hc_legend(enabled = FALSE)
+      
+      htmlwidgets::saveWidget(hc, tmp_html, selfcontained = TRUE)
+      
+      # 2. Capture PNG
+      webshot2::webshot(
+        tmp_html,
+        tmp_png,
+        vwidth = 900,
+        vheight = 700,
+        delay = 0.5
+      )
+      
+      # 3. Passer le PNG au Rmd
+      rmarkdown::render(
+        "rapport.Rmd",
+        output_file = file,
+        params = list(
+          radar_path = tmp_png,
+          df_details = df_details(),
+          identite   = identite()
+        ),
+        envir = new.env(parent = globalenv())
+      )
+    }
+  )
 }

@@ -9,6 +9,7 @@ library(purrr)
 library(writexl)
 #library(echarts4r)
 library(highcharter)
+library(webshot2)
 
 questions_list <- read_excel("data/question_autodiag_v27012026.xlsx") %>%
   rename_with(~ gsub("é", "e", .x)) %>%      
