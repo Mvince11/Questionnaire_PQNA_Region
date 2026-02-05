@@ -1,9 +1,12 @@
 server <- function(input, output, session) {
+  
   current_page <- reactiveVal("intro")
   completed_themes <- reactiveVal(character())  # stocke les noms des thèmes complétés
   answers <- reactiveValues()
   reponses_df_r <- reactiveVal(NULL)
   radar_path <- reactiveVal(NULL)
+  df_scores <- reactiveVal(NULL)
+  df_details_r <- reactiveVal(NULL)
   
   
   safe_id <- function(x) {
@@ -424,8 +427,11 @@ server <- function(input, output, session) {
   ##### Footer pages questions #####
   output$footer <- renderUI({
     p <- current_page()
-    if (p %in% c("intro", "login")) return(NULL) ### Empêche le footer de s'afficher sur la page login
+    if (p %in% c("intro", "login", "resultats")) return(NULL) ### Empêche le footer de s'afficher sur la page login
     pos <- match(p, themes)
+    
+    step <- which(themes == p)
+    if (length(step) == 0) step <- 0
     
     tagList(
     div(
@@ -440,7 +446,7 @@ server <- function(input, output, session) {
         style = "display:flex; align-items:center; justify-content:space-between;",
         
         # bouton précédent à gauche (si applicable)
-        if (!is.null(pos) && pos > 1) {
+        if (!is.na(pos) && pos > 1) {
           div(
             class = "left-btn",
             actionButton(
@@ -460,13 +466,13 @@ server <- function(input, output, session) {
         # bouton à droite
         div(
           class = "right-btn",
-          if (!is.null(p) && p == themes[length(themes)]) {
+          if (!is.na(pos) && pos == length(themes)) {
             actionButton(
               "submit", "Soumettre",
               style = "background-color:#ef7757;color:white;border:none;
                      padding:10px 20px;border-radius:6px;font-size:1;6rem;"
             )
-          } else {
+          }  else if (!is.na(pos)) {
             actionButton(
               inputId = safe_id(paste0("next_", p)), "Suivant >",
               style = "background-color:#ef7757;color:white;border:none;
@@ -517,10 +523,9 @@ server <- function(input, output, session) {
       )
     ),tags$script(
       HTML(
-        sprintf("window.currentProgressStep = %d;", which(themes == current_page()))
+        sprintf("window.currentProgressStep = %d;", step))
           )
                 )
-    )
   })
   
   validate_choix <- function(questions_list) {
@@ -629,23 +634,29 @@ server <- function(input, output, session) {
   
   observeEvent(input$prev_btn, {
     pos <- match(current_page(), themes)
-    if (!is.null(pos) && pos > 1) {
+    
+    if (!is.na(pos) && pos > 1) {
       prev_theme <- themes[pos - 1]
       current_page(prev_theme)
       
-      # 🔄 Optionnel : retirer le thème actuel de completed
       current_theme <- themes[pos]
       completed_themes(setdiff(completed_themes(), current_theme))
     }
   })
   
   
+  
   # 🔄 Navigation
   #observeEvent(input$next_btn, current_page(themes[1]))
   observeEvent(input$next_btn, current_page("login"))
-  for (i in seq_along(themes[-length(themes)])) {
-    observeEvent(input[[paste0("next_", themes[i])]], current_page(themes[i + 1]))
+  if (length(themes) > 1) {
+    for (i in seq_along(themes[-length(themes)])) {
+      observeEvent(input[[paste0("next_", themes[i])]], {
+        current_page(themes[i + 1])
+      })
+    }
   }
+  
   # observeEvent(input$next_submit, current_page("submit"))
   # observeEvent(input$back_submit, current_page(themes[length(themes)]))
   
@@ -702,6 +713,18 @@ server <- function(input, output, session) {
         filter(!(Reponse %in% c("", "Sélectionner…", "Sélectionner...")))
     )
   
+      df_details_r(
+        reponses_df_r() %>%
+          left_join(
+            questions_list %>% select(Numero, Theme, Objectif),
+            by = "Numero"
+          ) %>%
+          group_by(Theme, Objectif) %>%
+          summarise(
+            score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),
+            .groups = "drop"
+          )
+      )
     
     genre <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Civilité"]
     nom <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Nom"]
@@ -744,6 +767,7 @@ server <- function(input, output, session) {
     
     df$value <- round(df$value / 30 * 100, 1)
     df_local <- df
+    df_scores(df_local)
     
     output$kiviat <- renderHighchart({
       
@@ -860,7 +884,7 @@ server <- function(input, output, session) {
       )
   })
   
-  
+#### identité #####
   identite <- reactive({
     req(reponses_df_r())
     df <- reponses_df_r()
@@ -1079,19 +1103,23 @@ server <- function(input, output, session) {
       nom <- id$nom
       prenom <- id$prenom
       
-      # Sécurisation
-      if (is.null(nom) || nom == "") nom <- "inconnu"
-      if (is.null(prenom) || prenom == "") prenom <- "inconnu"
+      if (is.null(nom) || is.na(nom) || nom == "") nom <- "inconnu"
+      if (is.null(prenom) || is.na(prenom) || prenom == "") prenom <- "inconnu"
       
-      paste0("autodiagnostic_", nom, "_", prenom, "_", Sys.Date(), ".pdf") },
+      paste0("autodiagnostic_", nom, "_", prenom, "_", Sys.Date(), ".pdf")
+    
+    },
     
     content = function(file) {
       
-      # 1. Générer le radar en HTML temporaire
-      tmp_html <- tempfile(fileext = ".html")
-      tmp_png  <- tempfile(fileext = ".png")
+      library(highcharter)
+      library(htmlwidgets)
+      library(webshot)
       
-      hc <- highchart() %>%
+      df <- df_scores()
+      
+      # --- Reconstruire le radar ---
+      hc <- highchart() %>% 
         hc_chart(polar = TRUE, type = "line") %>%
         hc_xAxis(
           categories = df$theme,
@@ -1142,28 +1170,41 @@ server <- function(input, output, session) {
         ) %>%
         hc_legend(enabled = FALSE)
       
-      htmlwidgets::saveWidget(hc, tmp_html, selfcontained = TRUE)
+      # 1) widget HTML temporaire
+      tmp_html <- tempfile(fileext = ".html")
+      saveWidget(hc, tmp_html, selfcontained = TRUE)
       
-      # 2. Capture PNG
-      webshot2::webshot(
-        tmp_html,
-        tmp_png,
-        vwidth = 900,
-        vheight = 700,
-        delay = 0.5
-      )
+      # 2) capture PNG
+      tmp_png <- tempfile(fileext = ".png")
+      webshot(tmp_html, tmp_png, vwidth = 900, vheight = 700, delay = 2)
       
-      # 3. Passer le PNG au Rmd
+      # --- Chemin compatible LaTeX ---
+      radar_path_safe <- normalizePath(tmp_png, winslash = "/", mustWork = TRUE)
+      
+      # 3. Chemin final dans Rapports/
+      if (!dir.exists("Rapports")) dir.create("Rapports")
+      output_path <- file.path("Rapports", basename(file))
+      
+      # --- Génération du PDF ---
       rmarkdown::render(
-        "rapport.Rmd",
-        output_file = file,
+        input = "rapport.Rmd",
+        output_file = output_path,
         params = list(
-          radar_path = tmp_png,
-          df_details = df_details(),
+          radar_path = radar_path_safe,
+          df_details = df_details_r(),# <-- LA CORRECTION
           identite   = identite()
         ),
         envir = new.env(parent = globalenv())
       )
+      file.copy(output_path, file, overwrite = TRUE)
+      
     }
   )
+  
+  # observeEvent(input$download_pdf,{
+  #   showModal(modalDialog(
+  #     "Rapport en cours de construction,
+  #     Veuillez patienter..."
+  #   ))
+  # })
 }

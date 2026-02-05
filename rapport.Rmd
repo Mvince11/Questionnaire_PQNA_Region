@@ -17,27 +17,35 @@ res <- params$df_details
 radar_path <- params$radar_path
 ```
 
-```{r , Fig.Akign='center',Fig.Width=7, Fig.height=5}
-knitr::include_graphics(params$radar_path)
+```{r echo=FALSE, out.width="100%"}
+knitr::include_graphics(radar_path)
 ```
 
-```{r}
-library(dplyr)
+```{r resultats, echo=FALSE}
+if (!is.null(res)) {
 
-themes <- unique(res$Theme)
+  themes <- unique(res$Theme)
 
-for (th in themes) {
-  cat("## ", th, "\n\n")
-  
-  d <- res %>% filter(Theme == th)
-  
-  # tableau simple
-  knitr::kable(
-    d %>% select(Objectif, score_pct),
-    col.names = c("Objectif", "Score (%)"),
-    align = c("l", "c")
-  )
-  
-  cat("\n\n")
+  for (th in themes) {
+
+    cat("## ", th, "\n\n")
+
+    d <- res[res$Theme == th, ]
+
+    if (nrow(d) > 0) {
+      print(
+        knitr::kable(
+          d[, c("Objectif", "score_pct")],
+          col.names = c("Objectif", "Score (%)"),
+          align = c("l", "c")
+        )
+      )
+    } else {
+      cat("Aucun objectif pour ce thème.\n\n")
+    }
+  }
+
+} else {
+  cat("**Aucun détail de résultats disponible.**")
 }
 ```

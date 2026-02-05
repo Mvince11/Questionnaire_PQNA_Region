@@ -7,9 +7,11 @@ library(gtools)
 library(rsconnect)
 library(purrr)
 library(writexl)
-#library(echarts4r)
+library(rmarkdown)
 library(highcharter)
-library(webshot2)
+library(webshot)
+
+webshot::install_phantomjs()
 
 questions_list <- read_excel("data/question_autodiag_v27012026.xlsx") %>%
   rename_with(~ gsub("é", "e", .x)) %>%      
