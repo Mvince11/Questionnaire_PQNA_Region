@@ -1,5 +1,5 @@
 ---
-title: "Auto-diagnostic des transitions – Synthèse"
+title: ""
 output:
   pdf_document:
     latex_engine: xelatex
@@ -8,6 +8,22 @@ params:
   identite: NULL
   df_details: NULL
   radar_path: NULL
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{fontspec}
+  - \setmainfont{DejaVu Sans}
+  - \usepackage{graphicx}
+  - \usepackage{xcolor}
+  - \usepackage{booktabs}
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhf{}
+  - \fancyfoot[L]{\includegraphics[width=1.5cm]{www/region-nouvelle-aquitaine_logo.jpg}}
+  - \fancyfoot[R]{\thepage}
+  - \renewcommand{\headrulewidth}{0pt}
+  - \renewcommand{\footrulewidth}{0.2pt}
+  - \usepackage{xcolor}
+  - \definecolor{bordeaux}{RGB}{128,0,32}
 ---
 
 ```{r setup, include=FALSE}
@@ -17,35 +33,103 @@ res <- params$df_details
 radar_path <- params$radar_path
 ```
 
+```{=latex}
+\begin{center}
+\begin{minipage}{0.25\linewidth}
+\includegraphics[width=3.5cm]{www/region-nouvelle-aquitaine_logo.jpg}
+\end{minipage}
+\begin{minipage}{0.70\linewidth}
+\raggedleft
+\colorbox{bordeaux!20}{%
+  \parbox{\linewidth}{%
+    \vspace{0.2cm}
+    \raggedleft
+    {\LARGE \textbf{Auto-diagnostic des transitions}}\\[0.15cm]
+    {\Large Synthèse}
+    \vspace{0.2cm}
+  }%
+}
+\end{minipage}
+\end{center}
+\vspace{0.8cm}
+```
+
+
 ```{r echo=FALSE, out.width="100%"}
 knitr::include_graphics(radar_path)
 ```
+```{r include=FALSE}
+library(xtable)
+```
 
-```{r resultats, echo=FALSE}
+```{r resultats, echo=FALSE, results='asis'}
+library(stringi)
+
+sanitize <- function(x) {
+  x <- stringi::stri_trans_general(x, "Latin-ASCII")
+  x <- gsub("\\\\", "/", x)
+  x <- gsub("[\n\r]", " ", x)
+  return(x)
+}
+
+barre_latex <- function(score) {
+  filled <- score / 100 * 6
+  empty  <- 6 - filled
+
+  col <- if (score >= 70) {
+    "green"
+  } else if (score >= 50) {
+      "yellow" 
+  } else if (score >= 30) {
+      "orange" 
+  } else {
+      "red" 
+    }
+
+  paste0(
+    "{\\color{", col, "}\\rule{", round(filled,2), "cm}{3pt}}",
+    "{\\color{gray}\\rule{", round(empty,2), "cm}{3pt}}",
+    "\\hspace{0.3cm}", score, "\\%"
+  )
+}
+
 if (!is.null(res)) {
 
   themes <- unique(res$Theme)
 
   for (th in themes) {
 
-    cat("## ", th, "\n\n")
+    cat("## ", sanitize(th), "\n\n")
 
-    d <- res[res$Theme == th, ]
+    d <- res[res$Theme == th, c("Objectif", "score_pct")]
+    colnames(d) <- c("Objectif", "Score")
 
     if (nrow(d) > 0) {
-      print(
-        knitr::kable(
-          d[, c("Objectif", "score_pct")],
-          col.names = c("Objectif", "Score (%)"),
-          align = c("l", "c")
-        )
-      )
+
+      d$Objectif <- sanitize(d$Objectif)
+      d$Barre <- sapply(d$Score, barre_latex)
+
+      cat("\\begin{center}\n")
+      cat("\\begin{tabular}{p{10cm}c}\n")
+      cat("\\toprule\n")
+      cat("Objectif & Score \\\\\n")
+      cat("\\midrule\n")
+
+      for (i in 1:nrow(d)) {
+        cat(d$Objectif[i], " & ", d$Barre[i], " \\\\\n", sep = "")
+      }
+
+      cat("\\bottomrule\n")
+      cat("\\end{tabular}\n")
+      cat("\\end{center}\n\n")
+
     } else {
-      cat("Aucun objectif pour ce thème.\n\n")
+      cat("Aucun objectif pour ce theme.\n\n")
     }
   }
 
 } else {
-  cat("**Aucun détail de résultats disponible.**")
+  cat("**Aucun detail de resultats disponible.**")
 }
 ```
+
