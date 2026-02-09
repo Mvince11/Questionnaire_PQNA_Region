@@ -76,11 +76,11 @@ barre_latex <- function(score) {
   filled <- score / 100 * 6
   empty  <- 6 - filled
 
-  col <- if (score >= 70) {
-    "green"
+  col <- if (score >=80){
+    "#49CC2B"
   } else if (score >= 50) {
-      "yellow" 
-  } else if (score >= 30) {
+    "#6E9E62"
+  } else if (score >= 20) {
       "orange" 
   } else {
       "red" 
@@ -99,7 +99,7 @@ if (!is.null(res)) {
 
   for (th in themes) {
 
-    cat("## ", sanitize(th), "\n\n")
+    cat("Ambition ", sanitize(th), "\n\n")
 
     d <- res[res$Theme == th, c("Objectif", "score_pct")]
     colnames(d) <- c("Objectif", "Score")

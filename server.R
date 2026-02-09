@@ -1055,17 +1055,54 @@ server <- function(input, output, session) {
     )
     ),
     tags$br(),
-    tags$div(style='
-      width:100%;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      margin-top:30px;
-      margin-bottom:60px;
-    ',
-    downloadButton("download_pdf", "Télécharger la fiche des résultats au format PDF",
-                   class = "btn btn-primary"))
+    tags$div(
+      style='
+        width:100%;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        margin-top:30px;
+        margin-bottom:60px;
+      ',
+     tags$div(
+       style="position:relative; display:inline-block;",
+     downloadButton("download_pdf", "Télécharger la fiche des résultats au format PDF",
+                      class = "btn btn-primary"),
+    actionButton( "trigger_pdf", "", style = "position:absolute;
+                                              top:0;
+                                              left:0;
+                                              width:100%;
+                                              height:100%;
+                                              opacity:0;
+                                              border:none;
+                                              background:transparent;
+                                              cursor:pointer;
+                                              z-index:10;" )
+              )
+            ),
     
+    shinyalert::useShinyalert(force = TRUE),
+    
+    tags$script("
+      Shiny.addCustomMessageHandler('launch-download', function(message) {
+        document.getElementById('download_pdf').click();
+      });
+        "),
+    tags$style("
+        .loader {
+          border: 6px solid #f3f3f3;
+          border-top: 6px solid #0055A4;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        ")
     )
   })
 
@@ -1094,6 +1131,27 @@ server <- function(input, output, session) {
       ))
     }
   })
+  
+  observeEvent(input$trigger_pdf, {
+    
+    shinyalert::shinyalert(
+      title = "Génération du PDF",
+      text = "
+      <div style='display:flex; flex-direction:column; align-items:center;'>
+        <div class='loader'></div>
+        <p style='margin-top:15px;'>Votre fiche est en cours de création…</p>
+      </div>
+    ",
+      html = TRUE,
+      closeOnClickOutside = FALSE,
+      showConfirmButton = FALSE,
+      timer = 8000   # fermeture automatique après 4 secondes
+    )
+    
+    session$sendCustomMessage("launch-download", TRUE)
+  })
+  
+  
   
   output$download_pdf <- downloadHandler(
     
@@ -1149,7 +1207,7 @@ server <- function(input, output, session) {
           gridLineInterpolation = "polygon",
           lineWidth = 0,
           tickInterval = 25,
-          labels = list(style = list(color = "#666", fontSize = "12px"))
+          labels = list(style = list(color = "#666", fontSize = "14px"))
         ) %>%
         hc_series(
           list(
@@ -1200,11 +1258,4 @@ server <- function(input, output, session) {
       
     }
   )
-  
-  # observeEvent(input$download_pdf,{
-  #   showModal(modalDialog(
-  #     "Rapport en cours de construction,
-  #     Veuillez patienter..."
-  #   ))
-  # })
 }
