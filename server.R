@@ -1135,17 +1135,17 @@ server <- function(input, output, session) {
   observeEvent(input$trigger_pdf, {
     
     shinyalert::shinyalert(
-      title = "Génération du PDF",
+      title = "Création du PDF",
       text = "
       <div style='display:flex; flex-direction:column; align-items:center;'>
         <div class='loader'></div>
-        <p style='margin-top:15px;'>Votre fiche est en cours de création…</p>
+        <p style='margin-top:15px;'>Votre rapport de synthèse est en cours de création…</p>
       </div>
     ",
       html = TRUE,
       closeOnClickOutside = FALSE,
       showConfirmButton = FALSE,
-      timer = 8000   # fermeture automatique après 4 secondes
+      timer = 10000   # fermeture automatique après 4 secondes
     )
     
     session$sendCustomMessage("launch-download", TRUE)
@@ -1190,11 +1190,11 @@ server <- function(input, output, session) {
           function () {
             var angle = this.pos * (360 / this.axis.categories.length);
             if (angle > 330 || angle < 30) {
-              return '<span style=\"position:relative; font-size:12px; color:#000\">' + this.value + '</span>';
+              return '<span style=\"position:relative; font-size:14px; color:#000\">' + this.value + '</span>';
             } else if (angle > 150 && angle < 210) {
-              return '<span style=\"position:relative; top:6px; font-size:12px; color:#000\">' + this.value + '</span>';
+              return '<span style=\"position:relative; top:6px; font-size:14px; color:#000\">' + this.value + '</span>';
             } else {
-              return '<span style=\"font-size:12px; color:#000\">' + this.value + '</span>';
+              return '<span style=\"font-size:14px; color:#000\">' + this.value + '</span>';
             }
           }
         ")
@@ -1207,7 +1207,7 @@ server <- function(input, output, session) {
           gridLineInterpolation = "polygon",
           lineWidth = 0,
           tickInterval = 25,
-          labels = list(style = list(color = "#666", fontSize = "14px"))
+          labels = list(style = list(color = "#666", fontSize = "16px"))
         ) %>%
         hc_series(
           list(

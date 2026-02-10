@@ -24,6 +24,8 @@ header-includes:
   - \renewcommand{\footrulewidth}{0.2pt}
   - \usepackage{xcolor}
   - \definecolor{bordeaux}{RGB}{128,0,32}
+  - \usepackage{needspace}
+
 ---
 
 ```{r setup, include=FALSE}
@@ -34,24 +36,29 @@ radar_path <- params$radar_path
 ```
 
 ```{=latex}
+% Logo à droite
+\noindent
+\begin{tabular}{@{}p{0.75\linewidth}p{0.24\linewidth}@{}}
+  & \raggedleft\includegraphics[width=3.5cm]{www/region-nouvelle-aquitaine_logo.jpg}
+\end{tabular}
+
+% ===== ESPACE CLAIR ENTRE LOGO ET TITRE =====
+\vspace{1.2cm}
+
+% Titre centré
 \begin{center}
-\begin{minipage}{0.25\linewidth}
-\includegraphics[width=3.5cm]{www/region-nouvelle-aquitaine_logo.jpg}
-\end{minipage}
-\begin{minipage}{0.70\linewidth}
-\raggedleft
 \colorbox{bordeaux!20}{%
-  \parbox{\linewidth}{%
+  \parbox{1.2\linewidth}{%
     \vspace{0.2cm}
-    \raggedleft
-    {\LARGE \textbf{Auto-diagnostic des transitions}}\\[0.15cm]
-    {\Large Synthèse}
+    \centering
+    {\LARGE \textbf{Auto-diagnostic des transitions - Synthèse}}\\[0.15cm]
     \vspace{0.2cm}
   }%
 }
-\end{minipage}
 \end{center}
-\vspace{0.8cm}
+
+\vspace{0.6cm}
+
 ```
 
 
@@ -63,10 +70,7 @@ library(xtable)
 ```
 
 ```{r resultats, echo=FALSE, results='asis'}
-library(stringi)
-
 sanitize <- function(x) {
-  x <- stringi::stri_trans_general(x, "Latin-ASCII")
   x <- gsub("\\\\", "/", x)
   x <- gsub("[\n\r]", " ", x)
   return(x)
@@ -76,60 +80,68 @@ barre_latex <- function(score) {
   filled <- score / 100 * 6
   empty  <- 6 - filled
 
-  col <- if (score >=80){
-    "#49CC2B"
+  col <- if (score >= 80) {
+    "49CC2B"
   } else if (score >= 50) {
-    "#6E9E62"
+    "6E9E62"
   } else if (score >= 20) {
-      "orange" 
+    "EB6E26"
   } else {
-      "red" 
-    }
-
+    "CC1414"
+  }
+  
   paste0(
-    "{\\color{", col, "}\\rule{", round(filled,2), "cm}{3pt}}",
-    "{\\color{gray}\\rule{", round(empty,2), "cm}{3pt}}",
+    "{\\color[HTML]{", col, "}\\rule{", round(filled, 2), "cm}{3pt}}",
+    "{\\color{gray}\\rule{", round(empty, 2), "cm}{3pt}}",
     "\\hspace{0.3cm}", score, "\\%"
   )
 }
 
-if (!is.null(res)) {
+for (th in themes) {
 
-  themes <- unique(res$Theme)
+  # Il faut ~8cm libres sinon on saute de page
+  cat("\\needspace{8cm}\n")
 
-  for (th in themes) {
+  cat("\\vspace{0.8cm}\n")
+  
+  d <- res[res$Theme == th, c("Objectif", "score_pct")]
+  colnames(d) <- c("Objectif", "Score")
+  
+  # Score global de l’ambition
+  score_ambition <- round(mean(d$Score, na.rm = TRUE))
 
-    cat("Ambition ", sanitize(th), "\n\n")
-
-    d <- res[res$Theme == th, c("Objectif", "score_pct")]
-    colnames(d) <- c("Objectif", "Score")
+  cat(
+    "\\textbf{\\fontsize{10pt}{12pt}\\selectfont Ambition ",
+    sanitize(th),
+    "} \\hfill \\small Score : ",
+    score_ambition,
+    "\\%\n\n",
+    sep = ""
+    )
 
     if (nrow(d) > 0) {
 
-      d$Objectif <- sanitize(d$Objectif)
-      d$Barre <- sapply(d$Score, barre_latex)
+    d$Objectif <- sanitize(d$Objectif)
+    d$Barre <- sapply(d$Score, barre_latex)
 
-      cat("\\begin{center}\n")
-      cat("\\begin{tabular}{p{10cm}c}\n")
-      cat("\\toprule\n")
-      cat("Objectif & Score \\\\\n")
-      cat("\\midrule\n")
+    cat("\\begin{center}\n")
+    cat("\\begin{tabular}{p{10cm}c}\n")
+    cat("\\toprule\n")
+    cat("Objectifs & Score \\\\\n")
+    cat("\\midrule\n")
 
-      for (i in 1:nrow(d)) {
-        cat(d$Objectif[i], " & ", d$Barre[i], " \\\\\n", sep = "")
-      }
-
-      cat("\\bottomrule\n")
-      cat("\\end{tabular}\n")
-      cat("\\end{center}\n\n")
-
-    } else {
-      cat("Aucun objectif pour ce theme.\n\n")
+    for (i in 1:nrow(d)) {
+      cat(d$Objectif[i], " & ", d$Barre[i], " \\\\\n", sep = "")
     }
-  }
 
-} else {
-  cat("**Aucun detail de resultats disponible.**")
+    cat("\\bottomrule\n")
+    cat("\\end{tabular}\n")
+    cat("\\end{center}\n\n")
+
+  } else {
+    cat("Aucun objectif pour ce thème.\n\n")
+  }
 }
+
 ```
 

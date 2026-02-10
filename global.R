@@ -10,6 +10,8 @@ library(writexl)
 library(rmarkdown)
 library(highcharter)
 library(webshot)
+library(shinyalert)
+
 
 webshot::install_phantomjs()
 
