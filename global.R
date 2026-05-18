@@ -12,8 +12,8 @@ library(highcharter)
 library(webshot)
 library(shinyalert)
 
-
-webshot::install_phantomjs()
+#tinytex::tlmgr_install("needspace")
+#webshot::install_phantomjs()
 
 questions_list <- read_excel("data/question_autodiag_v27012026.xlsx") %>%
   rename_with(~ gsub("é", "e", .x)) %>%      

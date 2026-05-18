@@ -105,7 +105,7 @@ server <- function(input, output, session) {
         # --- Container avec colonnes ---
         div(
           class = "container",
-          style = "display:flex; justify-content:space-between;width:auto; align-items:flex-start; margin:0 5%;margin-bottom:5%;",
+          style = "display:flex; justify-content:space-between;width:auto; align-items:flex-start; margin:5% 5% 10%;",
           
           # Colonne gauche
           div(
@@ -152,6 +152,16 @@ server <- function(input, output, session) {
             style = "flex:1; text-align:center;",
             tags$img(src = "Capture-1.jpg", alt = "Image droite", style = "max-width:100%; height:auto;")
           )
+          ),
+          # Logo Cerema en bas à droite
+          div(
+            style = "
+                position: absolute;
+                bottom: 50px;     
+                right: 30px;
+                z-index: 900;
+              ",
+            tags$img(src = "LogoCerema.png", style = "width:180px; height:auto;")
         ),tags$footer(
           style = "
                   position: fixed;
@@ -624,6 +634,9 @@ server <- function(input, output, session) {
         # 🔶 Passer au thème suivant si possible
         if (current_index < length(themes)) {
           current_page(themes[current_index + 1])
+          
+          # 🔥 Remonter en haut de la page
+          session$sendCustomMessage("scrollTop", TRUE)
         }
       })
     })

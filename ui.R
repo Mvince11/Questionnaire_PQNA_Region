@@ -8,6 +8,10 @@ ui <- fluidPage(
               tags$script(src = "initConditionals.js"),
               tags$script(src = "change_in_input.js"),
               tags$script(src = "score.js"),
+              tags$script("Shiny.addCustomMessageHandler('scrollTop', function(message) {
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            });
+                          "),
               tags$script(HTML(paste0("var themeMap = {};\n", paste(themes_map, collapse="\n"))))
    ),
 
