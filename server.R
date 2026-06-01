@@ -196,7 +196,7 @@ server <- function(input, output, session) {
         div(
           style = "margin-top:8%; text-align:center; font-family:'Source Sans Pro';",
           
-          h2("Connexion", style="color:#293574; font-weight:bold; margin-bottom:40px;"),
+          h2("Identification", style="color:#292574; font-weight:bold; margin-bottom:40px; font-family:marianne;"),
           
           div(
             style="display:inline-block; text-align:left; width:350px;",
