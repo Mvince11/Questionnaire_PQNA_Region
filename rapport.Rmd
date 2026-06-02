@@ -61,10 +61,20 @@ radar_path <- params$radar_path
 
 ```
 
+## Informations du répondant
+**Nom :** `r params$identite$nom`  
+**Prénom :** `r params$identite$prenom`  
+**Structure :** `r params$identite$structure`  
+**Email :** `r params$identite$email`  
+**Fonction :** `r params$identite$fonction`  
+**Co‑utilisateurs :** `r params$identite$co_users`
 
 ```{r echo=FALSE, out.width="100%"}
+
 knitr::include_graphics(radar_path)
+
 ```
+
 ```{r include=FALSE}
 library(xtable)
 ```

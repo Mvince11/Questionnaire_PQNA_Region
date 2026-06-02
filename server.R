@@ -1262,19 +1262,20 @@ server <- function(input, output, session) {
   output$download_pdf <- downloadHandler(
     
     filename = function() {
-      id <- identite()
       
-      nom <- id$nom
-      prenom <- id$prenom
+      infos <- user_info()
+      horodatage <- format(Sys.time(), "%Y-%m-%d-%H-%M")
+      nom_fichier <- paste0("reponses_", infos$nom, "_", infos$prenom, "_", horodatage)
       
-      if (is.null(nom) || is.na(nom) || nom == "") nom <- "inconnu"
-      if (is.null(prenom) || is.na(prenom) || prenom == "") prenom <- "inconnu"
-      
-      paste0("autodiagnostic_", nom, "_", prenom, "_", Sys.Date(), ".pdf")
-    
+      paste0(nom_fichier, ".pdf")
     },
     
+    
     content = function(file) {
+      
+      infos <- user_info()
+      horodatage <- format(Sys.time(), "%Y-%m-%d-%H-%M")
+      nom_fichier <- paste0("reponses_", infos$nom, "_", infos$prenom, "_", horodatage)
       
       library(highcharter)
       library(htmlwidgets)
@@ -1347,7 +1348,7 @@ server <- function(input, output, session) {
       
       # 3. Chemin final dans Rapports/
       if (!dir.exists("Rapports")) dir.create("Rapports")
-      output_path <- file.path("Rapports", basename(file))
+      output_path <- file.path("Rapports", paste0(nom_fichier, ".pdf"))
       
       # --- Génération du PDF ---
       rmarkdown::render(
@@ -1355,13 +1356,14 @@ server <- function(input, output, session) {
         output_file = output_path,
         params = list(
           radar_path = radar_path_safe,
-          df_details = df_details_r(),# <-- LA CORRECTION
-          identite   = identite()
+          df_details = df_details_r(),
+          identite   = user_info()
         ),
         envir = new.env(parent = globalenv())
       )
-      file.copy(output_path, file, overwrite = TRUE)
       
+      file.copy(output_path, file, overwrite = TRUE)
     }
   )
+  
 }
