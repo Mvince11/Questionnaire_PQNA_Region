@@ -34,7 +34,18 @@ ui <- fluidPage(
        ),
        windowTitle = "Questionnaire d'aide à la décision",
        collapsible = TRUE,
-       header = tags$head(tags$link(rel = "shortcut icon", href = "favicon.ico")),
+       header = tags$head(tags$link(rel = "shortcut icon", href = "favicon.ico"),
+                          tagList(
+                            tags$div(
+                              style = "position:absolute; right:20px; top:10px;z-index:2000;",
+                              actionButton(
+                                "admin_mode",
+                                "Mode administrateur",
+                                class = "btn btn-dark",
+                                style = "background:#444; color:white; border:none;"
+                              )
+                            )
+                          )),
        
        tabPanel(
          "Questionnaire",
@@ -46,7 +57,39 @@ ui <- fluidPage(
          mainPanel(width = 12, id = "resultats_page",uiOutput("resultat_ui")
     
          )
+       ),
+       
+       tabPanel(
+         "Admin",
+         value = "Admin",
+         
+         fluidRow(
+           column(
+             width = 8, offset = 2,   # <-- CENTRAGE PARFAIT
+             
+             h2("Mode administrateur"),
+             
+             h3("📁 Rapports PDF générés"),
+             selectInput("selected_pdf", "Choisir un PDF :", choices = NULL),
+             tableOutput("liste_pdfs"),
+             downloadButton("download_pdf_admin", "Télécharger le PDF sélectionné"),
+             
+             hr(),
+             
+             h3("📊 Fichiers Excel générés"),
+             selectInput("selected_excel", "Choisir un Excel :", choices = NULL),
+             tableOutput("liste_excels"),
+             downloadButton("download_excel_admin", "Télécharger le fichier sélectionné"),
+             
+             hr(),
+             
+             h3("🛠 Modifier le questionnaire"),
+             fileInput("new_questions", "Importer un fichier Excel de questions"),
+             actionButton("apply_questions", "Remplacer le questionnaire")
+           )
+         )
        )
+       
      ),
      
      # 👉 FOOTER ICI

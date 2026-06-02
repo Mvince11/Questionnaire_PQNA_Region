@@ -11,6 +11,7 @@ library(rmarkdown)
 library(highcharter)
 library(webshot)
 library(shinyalert)
+library(xtable)
 
 #tinytex::tlmgr_install("needspace")
 #webshot::install_phantomjs()

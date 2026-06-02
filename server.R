@@ -1366,4 +1366,69 @@ server <- function(input, output, session) {
     }
   )
   
+  #### Administrateur ####
+  
+  observeEvent(input$admin_mode, {
+    showModal(modalDialog(
+      title = "Connexion administrateur",
+      passwordInput("admin_pass", "Mot de passe :"),
+      footer = tagList(
+        modalButton("Annuler"),
+        actionButton("admin_login", "Se connecter")
+      )
+    ))
+  })
+  
+  observeEvent(input$admin_login, {
+    if (input$admin_pass != "cerema-admin") {
+      showModal(modalDialog(
+        title = "Accès refusé",
+        "Mot de passe incorrect.",
+        easyClose = TRUE
+      ))
+      return()
+    }
+    
+    removeModal()
+    updateTabsetPanel(session, "tabs", selected = "Admin")
+  })
+  
+  output$liste_pdfs <- renderTable({
+    files <- list.files("Rapports", pattern = "\\.pdf$", full.names = TRUE)
+    data.frame(
+      Nom = basename(files),
+      Chemin = files
+    )
+  })
+  
+  output$liste_excels <- renderTable({
+    files <- list.files("Reponses", pattern = "\\.xlsx$", full.names = TRUE)
+    data.frame(
+      Nom = basename(files),
+      Chemin = files
+    )
+  })
+  
+  
+  observe({
+    pdfs <- list.files("Rapports", pattern = "\\.pdf$", full.names = TRUE)
+    updateSelectInput(session, "selected_pdf", choices = pdfs)
+  })
+  
+  observe({
+    excels <- list.files("Reponses", pattern = "\\.xlsx$", full.names = TRUE)
+    updateSelectInput(session, "selected_excel", choices = excels)
+  })
+  
+  output$download_pdf_admin <- downloadHandler(
+    filename = function() basename(input$selected_pdf),
+    content = function(file) file.copy(input$selected_pdf, file)
+  )
+  
+  output$download_excel_admin <- downloadHandler(
+    filename = function() basename(input$selected_excel),
+    content = function(file) file.copy(input$selected_excel, file)
+  )
+  
+  
 }
