@@ -7,6 +7,7 @@ server <- function(input, output, session) {
   radar_path <- reactiveVal(NULL)
   df_scores <- reactiveVal(NULL)
   df_details_r <- reactiveVal(NULL)
+  user_info <- reactiveVal(list())
   
   
   safe_id <- function(x) {
@@ -201,8 +202,41 @@ server <- function(input, output, session) {
           div(
             style="display:inline-block; text-align:left; width:350px;",
             
-            textInput("login_user", "Identifiant :", placeholder = "Votre identifiant"),
-            passwordInput("login_pass", "Mot de passe :", placeholder = "Votre mot de passe"),
+            textInput(
+              inputId = "nom",
+              label = "Nom :",
+              placeholder = "Votre nom"
+            ),
+            
+            textInput(
+              inputId = "prenom",
+              label = "Prénom :",
+              placeholder = "Votre prénom"
+            ),
+            
+            textInput(
+              inputId = "structure",
+              label = "Structure :",
+              placeholder = "Nom de votre structure"
+            ),
+            
+            textInput(
+              inputId = "email",
+              label = "Adresse mail :",
+              placeholder = "Votre adresse mail"
+            ),
+            
+            textInput(
+              inputId = "fonction",
+              label = "Fonction :",
+              placeholder = "Votre fonction"
+            ),
+            
+            textInput(
+              inputId = "co_users",
+              label = "Co‑utilisateurs :",
+              placeholder = "Nom, prénom, structure…"
+            ),
             
             actionButton(
               "login_btn", "Se connecter",
@@ -278,15 +312,15 @@ server <- function(input, output, session) {
             tagList(
               h3(
                 paste(page),
-                style = "color:#293574;margin-left:5%;font-weight: bold;"
+                style = "color:#292574;margin-left:5%;font-weight: bold;font-family:Marianne;"
               ),
               if (!is.null(texte_theme) && !is.na(texte_theme) && nzchar(texte_theme)) {
                 tags$div(
                   
                   texte_intro,
                   texte_liste
-                ,style = "margin-left:5%; font-size:1.7rem; color:#293574; margin-bottom:44px; margin-top:40px;font-weight: bold;
-                          font-family: Source Sans Pro;"
+                ,style = "margin-left:5%; font-size:1.7rem; color:#292574; margin-bottom:44px; margin-top:40px;font-weight: bold;
+                          font-family: Marianne;text-justify:auto;"
                 )
               }
             ),
@@ -310,7 +344,7 @@ server <- function(input, output, session) {
               has_parent <- !is.na(parent_col) && parent_col != "" && parent_col != "NA"
               is_replaced <- numero %in% theme_questions$Remplace
               is_conditional <- has_parent
-              is_required <- tolower(q$Observation) == "obligatoire"
+              is_required <- grepl("obligatoire", tolower(trimws(q$Observation)))
               is_required <- if (!is.na(is_required)) is_required else FALSE
               
               # --- Commentaire éventuel [ ... ] ---
@@ -339,9 +373,12 @@ server <- function(input, output, session) {
               
                 
                 tags$p(HTML(sprintf(
-                  "<strong style='font-size:1.6rem; color:#293574;'>%s</strong> %s <span style='color:red;'>*</span>",
-                  question_sans_commentaire, tooltip_html
+                  "<strong style='font-size:1.9rem; color:#292574;font-family:Marianne;'>%s</strong> %s %s",
+                  question_sans_commentaire,
+                  tooltip_html,
+                  if (is_required) "<span style='color:red;'>*</span>" else ""
                 ))),
+                
                 
                 switch(style,
                        "radio" = tagList(
@@ -370,10 +407,10 @@ server <- function(input, output, session) {
                              class = "custom-checkbox",
                              style = if (!is.na(style_detail) && style_detail == "inline-block") {
                                # Cas particulier → inline-block
-                               "display: inline-block; margin-right:15px; margin-top:10px; color: #293574; font-weight: bold; opacity: 0.95;"
+                               "display: inline-block; margin-right:15px; margin-top:10px; color: #292574; font-weight: bold; opacity: 0.95;"
                              } else {
                                # Cas général → flex
-                               "display: flex; align-items: flex-start; gap: 12px; margin: 10px 0; color: #293574; font-weight: bold; opacity: 0.95;"
+                               "display: flex; align-items: flex-start; gap: 12px; margin: 10px 0; color: #292574; font-weight: bold; opacity: 0.95;"
                              },
                              
                              tags$input(
@@ -387,24 +424,24 @@ server <- function(input, output, session) {
                              tags$label(
                                `for` = id,
                                val,
-                               style = "font-size: 1.6rem; font-weight: bold; margin-left: 8px; line-height: 1.4; max-width: 90%; word-break: break-word;"
+                               style = "font-size: 1.9rem; font-weight: bold; margin-left: 8px; line-height: 1.4; max-width: 90%; word-break: break-word;"
                              )
                            )
                          })
                        ),
                        "textarea" = tags$textarea(
                          name = paste0("q", numero),id = paste0("q", numero), rows = 4, cols = 50, required = NA,is_required = is_required,
-                         style = "width:100%; margin-top:6px; color:#293574; font-weight:bold; opacity:0.9;border:2px solid rgba(239,119,87,1);height:200px;"
+                         style = "width:100%; margin-top:6px; color:#292574; font-weight:bold; opacity:0.9;border:2px solid rgba(239,119,87,1);height:200px;"
                        ),
                        "textarea-alt" = tags$textarea(
                          name = paste0("q", numero),id = paste0("q", numero), rows = 4, cols = 50, required = NA,is_required = is_required,
-                         style = "width:100%; margin-top:6px; color:#293574; font-weight:bold; opacity:0.9;border:2px solid rgba(239,119,87,1);
+                         style = "width:100%; margin-top:6px; color:#292574; font-weight:bold; opacity:0.9;border:2px solid rgba(239,119,87,1);
                                   height:35px;"
                        ),
                        "select" = tags$select(
                          name = paste0("q", numero), required = NA,
                          is_required = is_required,
-                         style = "width:100%; margin-top:6px; border:2px solid rgba(239,119,87,1); border-radius:6px; height:35px; color:#293574; font-weight:bold; opacity:0.9;
+                         style = "width:100%; margin-top:6px; border:2px solid rgba(239,119,87,1); border-radius:6px; height:35px; color:#292574; font-weight:bold; opacity:0.9;
                          font-size: 1.9rem;font-family: Apple Chancery;padding-left:10px;",
                          lapply(reponses, function(r) {
                            val <- trimws(gsub("&nbsp;", "", r))
@@ -687,13 +724,24 @@ server <- function(input, output, session) {
 #### Partie résultats ####
 ##########################
   
+  safe_scalar <- function(x) {
+    if (is.null(x) || length(x) == 0) return(NA)
+    if (length(x) > 1) return(paste(x, collapse = ", "))
+    return(x)
+  }
+  
+  
 ##### Enregistre toutes les Questions et réponses dans un fichier xlsx ######  
   observeEvent(input$submit, {
+    
     th <- "Formulaire de contact"
     if (!validate_theme(th)) return()
     
     completed_themes(c(completed_themes(), th))
     
+    # ============================
+    # 1) Extraction des réponses
+    # ============================
     reponses_df_r(
       questions_list %>%
         mutate(
@@ -725,50 +773,54 @@ server <- function(input, output, session) {
         select(Numero, Questions, Reponse, Score) %>%
         filter(!(Reponse %in% c("", "Sélectionner…", "Sélectionner...")))
     )
-  
-      df_details_r(
-        reponses_df_r() %>%
-          left_join(
-            questions_list %>% select(Numero, Theme, Objectif),
-            by = "Numero"
-          ) %>%
-          group_by(Theme, Objectif) %>%
-          summarise(
-            score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),
-            .groups = "drop"
-          )
-      )
     
-    genre <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Civilité"]
-    nom <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Nom"]
-    prenom <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Prénom"]
-    raison_sociale <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Raison sociale de la collectivité (nom exact)"]
-    adresse_mail <- reponses_df_r()$Reponse[reponses_df_r()$Questions == "Email"]
+    # ============================
+    # 2) Calcul des scores par thème
+    # ============================
+    df_details_r(
+      reponses_df_r() %>%
+        left_join(
+          questions_list %>% select(Numero, Theme, Objectif),
+          by = "Numero"
+        ) %>%
+        group_by(Theme, Objectif) %>%
+        summarise(
+          score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),
+          .groups = "drop"
+        )
+    )
     
-    genre          <- if (length(genre) == 0) NA else genre
-    nom            <- if (length(nom) == 0) NA else nom
-    prenom         <- if (length(prenom) == 0) NA else prenom
-    raison_sociale <- if (length(raison_sociale) == 0) NA else raison_sociale
-    adresse_mail   <- if (length(adresse_mail) == 0) NA else adresse_mail
+    # ============================
+    # 3) Récupération identité via reactiveVal()
+    # ============================
+    infos <- user_info()
     
     Identite <- data.frame(
-      "Civilité"        = genre,
-      Nom             = nom,
-      "Prénom"          = prenom,
-      `Raison sociale` = raison_sociale,
-      `Adresse mail`   = adresse_mail,
+      #Civilite        = infos$civilite,
+      Nom             = infos$nom,
+      Prenom          = infos$prenom,
+      Structure       = infos$structure,
+      Email           = infos$email,
+      Fonction        = infos$fonction,
+      Co_utilisateurs = infos$co_users,
       stringsAsFactors = FALSE
     )
     
+    # ============================
+    # 4) Export Excel final
+    # ============================
     horodatage <- format(Sys.time(), "%Y-%m-%d-%H-%M")
     
     writexl::write_xlsx(
       list(
         Identite = Identite,
-        Reponses = reponses_df_r()
+        Reponses = as.data.frame(reponses_df_r()),
+        Scores   = as.data.frame(df_details_r())
       ),
-      path = paste0("Reponses/reponses_", nom, "_", prenom, "_", horodatage, ".xlsx")
+      path = paste0("Reponses/reponses_", infos$nom, "_", infos$prenom, "_", horodatage, ".xlsx")
     )
+    
+    
     
     scores <- input$scores_par_theme
     if (is.null(scores)) return()
@@ -929,10 +981,11 @@ server <- function(input, output, session) {
         "<h3 style='
         margin-top:40px;
         margin-bottom:15px;
-        color:#0055A4;
+        color:#292574;
         text-align:center;
         font-weight:bold;
         font-size:26px;
+        font-family:marianne;
       '>%s</h3>",
         unique(d$Theme)
       )
@@ -945,7 +998,8 @@ server <- function(input, output, session) {
         text-align:center;
         font-size:18px;
         line-height:1.7;
-        color:#293574;
+        color:#292574;
+        font-family:marianne;
       '>",
         paste0(
           "<div style='
@@ -1121,29 +1175,68 @@ server <- function(input, output, session) {
 
   #### ObserveEvent login #####
   observeEvent(input$login_btn, {
-    user <- input$login_user
-    pass <- input$login_pass
     
-    if (user == "" || pass == "") {
+    user_info(list(
+      nom       = input$nom,
+      prenom    = input$prenom,
+      structure = input$structure,
+      email     = input$email,
+      fonction  = input$fonction,
+      co_users  = input$co_users
+    ))
+    
+    
+    # Récupération des champs
+    nom    <- input$nom
+    prenom <- input$prenom
+    struct <- input$structure
+    mail   <- input$email
+    fonct  <- input$fonction
+    co     <- input$co_users
+    
+    # Vérification des champs vides
+    champs_vides <- c(
+      if (nom    == "") "Nom",
+      if (prenom == "") "Prénom",
+      if (struct == "") "Structure",
+      if (mail   == "") "Adresse mail",
+      if (fonct  == "") "Fonction"#,
+      #if (co     == "") "Co‑utilisateurs"
+    )
+    
+    # Si au moins un champ est vide → message d’erreur
+    if (length(champs_vides) > 0) {
       showModal(modalDialog(
-        title = "Erreur",
-        "Veuillez remplir tous les champs.",
-        easyClose = TRUE
+        title = div(icon("exclamation-triangle"), "Champs manquants"),
+        HTML(paste0(
+          "Veuillez remplir les champs suivants avant de continuer :<br><ul>",
+          paste0("<li><strong>", champs_vides, "</strong></li>", collapse = ""),
+          "</ul>"
+        )),
+        easyClose = TRUE,
+        footer = modalButton("Corriger")
       ))
       return()
     }
     
-    # 🔐 Identifiants simples (à adapter si besoin)
-    if (user == "admin" && pass == "cerema") {
-      current_page(themes[1])   # on passe au premier thème
-    } else {
-      showModal(modalDialog(
-        title = "Connexion refusée",
-        "Identifiant ou mot de passe incorrect.",
-        easyClose = TRUE
-      ))
-    }
+    # Si tout est OK → accès au questionnaire
+    current_page(themes[1])
   })
+  
+  
+  observe({
+    infos <- user_info()
+    if (length(infos) == 0) return()
+    
+    updateTextInput(session, "nom",       value = infos$nom)
+    updateTextInput(session, "prenom",    value = infos$prenom)
+    updateTextInput(session, "structure", value = infos$structure)
+    updateTextInput(session, "email",     value = infos$email)
+    updateTextInput(session, "fonction",  value = infos$fonction)
+    updateTextInput(session, "co_users",  value = infos$co_users)
+  })
+  
+  
   
   observeEvent(input$trigger_pdf, {
     
