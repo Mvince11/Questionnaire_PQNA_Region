@@ -67,25 +67,33 @@ ui <- fluidPage(
            column(
              width = 8, offset = 2,   # <-- CENTRAGE PARFAIT
              
-             h2("Mode administrateur"),
+             tags$div(
+             h2("Mode administrateur")
+             ),
              
+             tags$div(
              h3("📁 Rapports PDF générés"),
-             selectInput("selected_pdf", "Choisir un PDF :", choices = NULL),
-             tableOutput("liste_pdfs"),
-             downloadButton("download_pdf_admin", "Télécharger le PDF sélectionné"),
+             selectInput("selected_pdf", "Choisir un PDF :", choices = NULL, width = '430px'),
+             #tableOutput("liste_pdfs"),
+             downloadButton("download_pdf_admin", "Télécharger le PDF sélectionné")
+             ),
              
              hr(),
-             
+
+             tags$div(
              h3("📊 Fichiers Excel générés"),
-             selectInput("selected_excel", "Choisir un Excel :", choices = NULL),
-             tableOutput("liste_excels"),
-             downloadButton("download_excel_admin", "Télécharger le fichier sélectionné"),
+             selectInput("selected_excel", "Choisir un Excel :", choices = NULL, width = '430px'),
+             #tableOutput("liste_excels"),
+             downloadButton("download_excel_admin", "Télécharger le fichier sélectionné")
+             ),
              
              hr(),
              
+             tags$div(
              h3("🛠 Modifier le questionnaire"),
              fileInput("new_questions", "Importer un fichier Excel de questions"),
              actionButton("apply_questions", "Remplacer le questionnaire")
+             )
            )
          )
        )

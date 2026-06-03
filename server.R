@@ -1430,5 +1430,48 @@ server <- function(input, output, session) {
     content = function(file) file.copy(input$selected_excel, file)
   )
   
+  observeEvent(input$new_questions, {
+    req(input$new_questions)
+    
+    new_q <- readxl::read_excel(input$new_questions$datapath)
+    
+    # Vérification minimale
+    required_cols <- c("Theme", "Objectif", "Numero", "Questions", "Style", "Reponses", "Parent", "Condition",
+                        "Textetheme", "Affichage", "Remplace", "Choix", "Score","Note", "Observation")
+    # Convertir la colonne Reponses en liste
+    if ("Reponses" %in% names(new_q)) {
+      new_q$reponses <- lapply(new_q$Reponses, function(x) {
+        if (is.na(x) || x == "") return(character(0))
+        trimws(unlist(strsplit(x, ";")))
+      })
+    } else {
+      showModal(modalDialog(
+        title = "Erreur",
+        "La colonne 'Reponses' est absente du fichier Excel.",
+        easyClose = TRUE
+      ))
+      return()
+    }
+    
+    # Stockage temporaire
+    new_questions_list <<- new_q
+    
+    showModal(modalDialog(
+      title = "Fichier chargé",
+      "Le fichier de questions a été importé. Cliquez sur 'Remplacer le questionnaire' pour l'appliquer.",
+      easyClose = TRUE
+    ))
+  })
   
+  observeEvent(input$apply_questions, {
+    req(exists("new_questions_list"))
+    
+    questions_list <<- new_questions_list
+    
+    showModal(modalDialog(
+      title = "Succès",
+      "Le questionnaire a été mis à jour.",
+      easyClose = TRUE
+    ))
+  })
 }
