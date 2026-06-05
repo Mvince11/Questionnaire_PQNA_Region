@@ -194,58 +194,67 @@ server <- function(input, output, session) {
       )
     } else if (page == "login") {
       return(
-        div(
-          style = "margin-top:8%; text-align:center; font-family:'Source Sans Pro';",
+        mainPanel(width=12,
+                  id="identification",
+          style = "
+      display:flex;
+      height:100vh;          /* pleine hauteur réelle */
+      width:100%;
+      margin:0;
+      padding:0;
+      overflow:hidden;       /* supprime toute scrollbar */
+    ",
           
-          h2("Identification", style="color:#292574; font-weight:bold; margin-bottom:40px; font-family:marianne;"),
-          
+          # ---- COLONNE GAUCHE ----
           div(
-            style="display:inline-block; text-align:left; width:350px;",
+            style = "
+        flex:1;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        padding:0;
+        margin:0;
+      ",
             
-            textInput(
-              inputId = "nom",
-              label = "Nom :",
-              placeholder = "Votre nom"
+            h2("Identification",
+               style="color:#292574; font-weight:bold; margin-bottom:30px; font-family:marianne;"
             ),
             
-            textInput(
-              inputId = "prenom",
-              label = "Prénom :",
-              placeholder = "Votre prénom"
-            ),
-            
-            textInput(
-              inputId = "structure",
-              label = "Structure :",
-              placeholder = "Nom de votre structure"
-            ),
-            
-            textInput(
-              inputId = "email",
-              label = "Adresse mail :",
-              placeholder = "Votre adresse mail"
-            ),
-            
-            textInput(
-              inputId = "fonction",
-              label = "Fonction :",
-              placeholder = "Votre fonction"
-            ),
-            
-            textInput(
-              inputId = "co_users",
-              label = "Co‑utilisateurs :",
-              placeholder = "Nom, prénom, structure…"
-            ),
-            
-            actionButton(
-              "login_btn", "Se connecter",
-              style="margin-top:20px; width:100%; background-color:#ef7757; color:white;
+            div(
+              style="display:inline-block; text-align:left;",
+              
+              textInput("nom", "Nom :", placeholder = "Votre nom"),
+              textInput("prenom", "Prénom :", placeholder = "Votre prénom"),
+              textInput("structure", "Structure :", placeholder = "Nom de votre structure"),
+              textInput("email", "Adresse mail :", placeholder = "Votre adresse mail"),
+              textInput("fonction", "Fonction :", placeholder = "Votre fonction"),
+              textInput("co_users", "Co‑utilisateurs :", placeholder = "Nom, prénom, structure…"),
+              
+              actionButton(
+                "login_btn", "Se connecter",
+                style="margin-top:20px; width:100%; background-color:#ef7757; color:white;
                  border:none; padding:10px; border-radius:6px; font-size:1.4rem;"
+              )
             )
+          ),
+          
+          # ---- COLONNE DROITE : IMAGE PLEINE HAUTEUR ----
+          div(
+            style = "
+        flex:1;
+        background-image:url('neoterra-def01-f2a34f08.webp');
+        background-size:cover;        /* couvre toute la zone */
+        background-position:center;   /* cadrage propre */
+        background-repeat:no-repeat;
+        height:100%;
+        margin:0;
+        padding:0;
+      "
           )
         )
       )
+      
     } else {
       
         
@@ -474,7 +483,9 @@ server <- function(input, output, session) {
   ##### Footer pages questions #####
   output$footer <- renderUI({
     p <- current_page()
-    if (p %in% c("intro", "login", "resultats")) return(NULL) ### Empêche le footer de s'afficher sur la page login
+    if (p %in% c("intro", "login", "resultats","identification")){
+      return(tags$div(style="display:none; height:0; padding:0; margin:0;"))
+    }
     pos <- match(p, themes)
     
     step <- which(themes == p)
