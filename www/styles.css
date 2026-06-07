@@ -10,6 +10,12 @@ body {
   margin-right: 0 !important;
 }
 
+.container-fluid, .row {
+  margin:0 !important;
+  padding:0 !important;
+}
+
+
 .navbar-default {
   height: 120px;
 }
@@ -39,6 +45,15 @@ display: none;
   margin-top: -20px;
 }
 
+#footer, #footer_conditional {
+  width:100% !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+
 .mise_en_page{
   margin-left: 11%;
   margin-right: 11% !important;
@@ -48,6 +63,8 @@ display: none;
   width: auto;
   opacity: 1;
   float: inherit;
+  overflow-x: hidden;
+  margin-bottom:80px;
 }
 
 h4 {
@@ -344,6 +361,30 @@ textarea{
   .navbar-default .navbar-brand {
     margin-left: 20px;
   }
+  
+  /* Fond du dropdown selectize */
+.selectize-dropdown {
+  background-color: white !important;
+  opacity: 1 !important;
+  z-index: 9999 !important;
+}
+
+/* Fond des items dans le dropdown */
+.selectize-dropdown .selectize-dropdown-content {
+  background-color: white !important;
+}
+
+/* Fond du champ selectize lui-même */
+.selectize-input {
+  background-color: white !important;
+  opacity: 1 !important;
+}
+
+/* Empêche la transparence lors du focus */
+.selectize-input.focus {
+  background-color: white !important;
+}
+
 
   /*.modal-dialog {
     max-width: 98vw !important;

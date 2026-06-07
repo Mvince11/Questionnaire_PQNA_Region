@@ -14,7 +14,6 @@ ui <- fluidPage(
                           "),
               tags$script(HTML(paste0("var themeMap = {};\n", paste(themes_map, collapse="\n"))))
    ),
-
    tagList(
      navbarPage(
        id = "tabs",
@@ -54,7 +53,7 @@ ui <- fluidPage(
        
        tabPanel(
          "Résultats",
-         mainPanel(width = 12, id = "resultats_page",uiOutput("resultat_ui")
+         mainPanel(width = 12, style="overflow-x:hidden;",id = "resultats_page",uiOutput("resultat_ui")
     
          )
        ),
@@ -65,39 +64,53 @@ ui <- fluidPage(
          
          fluidRow(
            column(
-             width = 8, offset = 2,   # <-- CENTRAGE PARFAIT
+             width = 8, offset = 2,
              
-             tags$div(
-             h2("Mode administrateur")
+             # Bouton retour
+             actionButton(
+               "go_home",
+               "Retour à l'accueil",
+               style="background:#292574; color:white; border:none; margin:20px 0;"
              ),
              
-             tags$div(
+             h2("Mode administrateur"),
+             
+             # --- PDF ---
              h3("📁 Rapports PDF générés"),
-             selectInput("selected_pdf", "Choisir un PDF :", choices = NULL, width = '430px'),
-             #tableOutput("liste_pdfs"),
-             downloadButton("download_pdf_admin", "Télécharger le PDF sélectionné")
+             
+             div(
+               style="display:flex; align-items:center; gap:15px;",
+               selectInput("selected_pdf", "Choisir un PDF :", choices = NULL, width = '420px'),
+               downloadButton("download_pdf_admin", "Télécharger",
+                              style="height:38px; margin-top:8px; background:#ef7757; color:white;")
              ),
              
              hr(),
-
-             tags$div(
+             
+             # --- Excel ---
              h3("📊 Fichiers Excel générés"),
-             selectInput("selected_excel", "Choisir un Excel :", choices = NULL, width = '430px'),
-             #tableOutput("liste_excels"),
-             downloadButton("download_excel_admin", "Télécharger le fichier sélectionné")
+             
+             div(
+               style="display:flex; align-items:center; gap:15px;",
+               selectInput("selected_excel", "Choisir un Excel :", choices = NULL, width = '420px'),
+               downloadButton("download_excel_admin", "Télécharger",
+                              style="height:38px; margin-top:8px; background:#ef7757; color:white;")
              ),
              
              hr(),
              
-             tags$div(
+             # --- Modifier questionnaire ---
              h3("🛠 Modifier le questionnaire"),
-             fileInput("new_questions", "Importer un fichier Excel de questions"),
-             actionButton("apply_questions", "Remplacer le questionnaire")
-             )
-           )
-         )
-       )
-       
+             
+             div(
+               style="display:flex; align-items:center; gap:15px;",
+               fileInput("new_questions", "Importer un fichier Excel de questions", buttonLabel = "Parcourir", placeholder = "Aucun fichier sélectionné" ),
+               actionButton("apply_questions", "Remplacer",
+                     style="height:38px; margin-top:-30px; background:#ef7757; color:white;")
+              )
+            )
+          )
+        )
      ),
      
      # 👉 FOOTER ICI

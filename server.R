@@ -203,6 +203,7 @@ server <- function(input, output, session) {
       margin:0;
       padding:0;
       overflow:hidden;       /* supprime toute scrollbar */
+      margin-top:-20px;
     ",
           
           # ---- COLONNE GAUCHE ----
@@ -472,7 +473,7 @@ server <- function(input, output, session) {
   output$footer_conditional <- renderUI({
     if (as.character(current_page()) != "intro") {
       tagList(
-        tags$br(), tags$br(), tags$br(), tags$br(),
+        #tags$br(), tags$br(), tags$br(), tags$br(),
         uiOutput("footer")
               )
     } else {
@@ -501,7 +502,7 @@ server <- function(input, output, session) {
       # ligne dots + bouton
       div(
         id = "footer-dots-container",
-        style = "display:flex; align-items:center; justify-content:space-between;",
+        style = "display:flex; align-items:center; justify-content:space-between;margin-top:14px;",
         
         # bouton précédent à gauche (si applicable)
         if (!is.na(pos) && pos > 1) {
@@ -510,7 +511,7 @@ server <- function(input, output, session) {
             actionButton(
               "prev_btn", "< Précédent",
               style = "background-color:#ef7757;color:white;border:none;
-                     padding:10px 20px;border-radius:6px;font-size:1.6rem;"
+                     padding:10px 20px;border-radius:6px;font-size:1.6rem;margin-left:12px;"
             )
           )
         },
@@ -528,13 +529,13 @@ server <- function(input, output, session) {
             actionButton(
               "submit", "Soumettre",
               style = "background-color:#ef7757;color:white;border:none;
-                     padding:10px 20px;border-radius:6px;font-size:1;6rem;"
+                     padding:10px 20px;border-radius:6px;font-size:1;6rem;margin-right:12px;"
             )
           }  else if (!is.na(pos)) {
             actionButton(
               inputId = safe_id(paste0("next_", p)), "Suivant >",
               style = "background-color:#ef7757;color:white;border:none;
-                     padding:10px 20px;border-radius:6px;font-size:1.6rem;"
+                     padding:10px 20px;border-radius:6px;font-size:1.6rem;margin-right:12px;"
             )
           }
         )
@@ -1485,4 +1486,9 @@ server <- function(input, output, session) {
       easyClose = TRUE
     ))
   })
+  
+  observeEvent(input$go_home, {
+    updateNavbarPage(session, "tabs", selected = "Questionnaire")
+  })
+  
 }
