@@ -59,6 +59,7 @@ ui <- fluidPage(
        ),
        
        tabPanel(
+         style="background-color:#f2ecea; margin-top:-20px; padding-bottom:82px;",
          "Admin",
          value = "Admin",
          
@@ -73,41 +74,60 @@ ui <- fluidPage(
                style="background:#292574; color:white; border:none; margin:20px 0;"
              ),
              
-             h2("Mode administrateur"),
+             h2("Mode administrateur", style="font-family:Marianne; font-size:40px; text-align:center;margin-bottom:60px;"),
              
+             
+             div(
+               style="border: 1px solid;
+                      padding: 11px;
+                      border-radius: 8px;
+                      background-color: #fff;",
              # --- PDF ---
              h3("📁 Rapports PDF générés"),
              
              div(
-               style="display:flex; align-items:center; gap:15px;",
+               style="display:block; align-items:center; gap:15px;",
                selectInput("selected_pdf", "Choisir un PDF :", choices = NULL, width = '420px'),
                downloadButton("download_pdf_admin", "Télécharger",
                               style="height:38px; margin-top:8px; background:#ef7757; color:white;")
+                )
              ),
              
              hr(),
              
+             div(
+               style="border: 1px solid;
+                      padding: 11px;
+                      border-radius: 8px;
+                      background-color: #fff;",
              # --- Excel ---
              h3("📊 Fichiers Excel générés"),
              
              div(
-               style="display:flex; align-items:center; gap:15px;",
+               style="display:block; align-items:center; gap:15px;",
                selectInput("selected_excel", "Choisir un Excel :", choices = NULL, width = '420px'),
                downloadButton("download_excel_admin", "Télécharger",
                               style="height:38px; margin-top:8px; background:#ef7757; color:white;")
+                )
              ),
              
              hr(),
              
+             div(
+               style="border: 1px solid;
+                      padding: 11px;
+                      border-radius: 8px;
+                      background-color: #fff;",
              # --- Modifier questionnaire ---
              h3("🛠 Modifier le questionnaire"),
              
              div(
-               style="display:flex; align-items:center; gap:15px;",
+               style="display:block; align-items:center; gap:15px;",
                fileInput("new_questions", "Importer un fichier Excel de questions", buttonLabel = "Parcourir", placeholder = "Aucun fichier sélectionné" ),
                actionButton("apply_questions", "Remplacer",
                      style="height:38px; margin-top:-30px; background:#ef7757; color:white;")
-              )
+                )
+             )
             )
           )
         )

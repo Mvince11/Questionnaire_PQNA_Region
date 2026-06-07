@@ -243,15 +243,33 @@ server <- function(input, output, session) {
           # ---- COLONNE DROITE : IMAGE PLEINE HAUTEUR ----
           div(
             style = "
-        flex:1;
-        background-image:url('neoterra-def01-f2a34f08.webp');
-        background-size:cover;        /* couvre toute la zone */
-        background-position:center;   /* cadrage propre */
-        background-repeat:no-repeat;
-        height:100%;
-        margin:0;
-        padding:0;
-      "
+            flex:1;
+            position:relative; 
+            background-image:url('neoterra-def01-f2a34f08.webp');
+            background-size:cover;        /* couvre toute la zone */
+            background-position:center;   /* cadrage propre */
+            background-repeat:no-repeat;
+            height:100%;
+            margin:0;
+            padding:0;
+          ",
+            div(
+              style = "
+            position:absolute;
+            top:50%;
+            left:50%;
+            transform:translate(-50%, -50%);
+            color:white;
+            font-size:2.2rem;
+            font-weight:bold;
+            text-align:center;
+            text-shadow:0 2px 8px rgba(0,0,0,0.4);
+            width:80%;
+          ",
+              div("Néo Terra", style="font-size:70px; font-weight:bolder;"),
+              br(),
+              div("Demain devient possible", style="font-size:30px;")
+            )
           )
         )
       )
