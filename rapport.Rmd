@@ -3,7 +3,7 @@ title: ""
 output:
   pdf_document:
     latex_engine: xelatex
-geometry: margin=2cm
+geometry: margin=1.6cm
 params:
   identite: NULL
   df_details: NULL
@@ -36,29 +36,33 @@ radar_path <- params$radar_path
 ```
 
 ```{=latex}
-% Logo à droite
+% ====== LOGO À GAUCHE ======
 \noindent
-\begin{tabular}{@{}p{0.75\linewidth}p{0.24\linewidth}@{}}
-  & \raggedleft\includegraphics[width=3.5cm]{www/region-nouvelle-aquitaine_logo.jpg}
-\end{tabular}
+\begin{minipage}{0.25\linewidth}
+  \includegraphics[width=3.5cm]{www/region-nouvelle-aquitaine_logo.jpg}
+\end{minipage}
+\begin{minipage}{0.74\linewidth}
+\end{minipage}
 
-% ===== ESPACE CLAIR ENTRE LOGO ET TITRE =====
-\vspace{1.2cm}
+\vspace{0.4cm}
 
-% Titre centré
-\begin{center}
+% ====== BARRE BORDEAUX PLEINE LARGEUR ======
+\noindent
 \colorbox{bordeaux!20}{%
-  \parbox{1.2\linewidth}{%
-    \vspace{0.2cm}
+  \parbox{\dimexpr\linewidth}{%
+    \vspace{0.35cm}
     \centering
-    {\LARGE \textbf{Auto-diagnostic des transitions - Synthèse}}\\[0.15cm]
-    \vspace{0.2cm}
+    {\LARGE \textbf{Auto-diagnostic des transitions - Synthèse des résultats}}
+    \vspace{0.35cm}
   }%
 }
-\end{center}
 
-\vspace{0.6cm}
+\vspace{0.5cm}
+```
 
+```{=Latex}
+% Réduction de l'espace vertical
+\setlength{\parskip}{2pt}
 ```
 
 ## Informations du répondant
@@ -69,7 +73,15 @@ radar_path <- params$radar_path
 **Fonction :** `r params$identite$fonction`  
 **Co‑utilisateurs :** `r params$identite$co_users`
 
-```{r echo=FALSE, out.width="100%"}
+```{=Latex}
+% On réserve l'espace exact pour la figure
+\needspace{11cm}
+
+% On force le bloc suivant à rester ici
+\par\vspace{0.2cm}
+```
+
+```{r echo=FALSE, out.width="100%", Fig.Pos='H'}
 
 knitr::include_graphics(radar_path)
 
@@ -106,6 +118,8 @@ barre_latex <- function(score) {
     "\\hspace{0.3cm}", score, "\\%"
   )
 }
+
+themes <- unique(res$Theme)
 
 for (th in themes) {
 

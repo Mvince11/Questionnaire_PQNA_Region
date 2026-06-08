@@ -1446,8 +1446,18 @@ server <- function(input, output, session) {
   })
   
   observe({
+    pdfs <- list.files("Rapports", pattern = "\\.pdf$", full.names = TRUE)
+    updateSelectInput(session, "selected_pdf_admin", choices = pdfs)
+  })
+  
+  observe({
     excels <- list.files("Reponses", pattern = "\\.xlsx$", full.names = TRUE)
     updateSelectInput(session, "selected_excel", choices = excels)
+  })
+  
+  observe({
+    excels <- list.files("Reponses", pattern = "\\.xlsx$", full.names = TRUE)
+    updateSelectInput(session, "selected_excel_admin", choices = excels)
   })
   
   output$download_pdf_admin <- downloadHandler(
@@ -1508,5 +1518,37 @@ server <- function(input, output, session) {
   observeEvent(input$go_home, {
     updateNavbarPage(session, "tabs", selected = "Questionnaire")
   })
+  
+  observeEvent(input$delete_pdf, {
+    req(input$selected_pdf_admin)
+    
+    file_to_delete <- file.path("www/pdf", input$selected_pdf_admin)
+    
+    if (file.exists(file_to_delete)) {
+      file.remove(file_to_delete)
+    }
+    
+    # Mise à jour de la liste
+    updateSelectInput(session, "selected_pdf_admin",
+                      choices = list.files("www/pdf"))
+    
+    showNotification("PDF supprimé avec succès", type = "message")
+  })
+  
+  observeEvent(input$delete_excel, {
+    req(input$selected_excel_admin)
+    
+    file_to_delete <- file.path("www/excel", input$selected_excel_admin)
+    
+    if (file.exists(file_to_delete)) {
+      file.remove(file_to_delete)
+    }
+    
+    updateSelectInput(session, "selected_excel_admin",
+                      choices = list.files("www/excel"))
+    
+    showNotification("Fichier Excel supprimé avec succès", type = "message")
+  })
+  
   
 }

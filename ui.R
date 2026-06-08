@@ -65,25 +65,24 @@ ui <- fluidPage(
          
          fluidRow(
            column(
-             width = 8, offset = 2,
+             width = 12,
              
              # Bouton retour
              actionButton(
                "go_home",
                "Retour à l'accueil",
-               style="background:#292574; color:white; border:none; margin:20px 0;"
+               style="background:#292574; color:white; border:none; margin:40px;"
              ),
              
              h2("Mode administrateur", style="font-family:Marianne; font-size:40px; text-align:center;margin-bottom:60px;"),
              
-             
-             div(
-               style="border: 1px solid;
+            div(style="display:flex; gap:40px; flex-wrap:wrap; justify-content:center;",
+             div(style="border: 1px solid;
                       padding: 11px;
                       border-radius: 8px;
                       background-color: #fff;",
              # --- PDF ---
-             h3("📁 Rapports PDF générés"),
+             h3("📁 Sélectionner un rapport PDF généré"),
              
              div(
                style="display:block; align-items:center; gap:15px;",
@@ -92,16 +91,32 @@ ui <- fluidPage(
                               style="height:38px; margin-top:8px; background:#ef7757; color:white;")
                 )
              ),
+             div(
+               style="border: 1px solid;
+                      padding: 11px;
+                      border-radius: 8px;
+                      background-color: #fff;",
+               # --- PDF ---
+               h3("📁 Supprimer un rapport PDF généré"),
+               
+               div(
+                 style="display:block; align-items:center; gap:15px;",
+                 selectInput("selected_pdf_admin", "Choisir un PDF :", choices = NULL, width = '420px'),
+                 actionButton("delete_pdf", "Supprimer",
+                                style="height:38px; margin-top:8px; background:#ef7757; color:white;")
+               )
+             )
+             ),
              
              hr(),
-             
+            div(style="display:flex; gap:40px; flex-wrap:wrap;justify-content:center;",
              div(
                style="border: 1px solid;
                       padding: 11px;
                       border-radius: 8px;
                       background-color: #fff;",
              # --- Excel ---
-             h3("📊 Fichiers Excel générés"),
+             h3("📊 Sélectionner un Fichier Excel généré"),
              
              div(
                style="display:block; align-items:center; gap:15px;",
@@ -109,6 +124,23 @@ ui <- fluidPage(
                downloadButton("download_excel_admin", "Télécharger",
                               style="height:38px; margin-top:8px; background:#ef7757; color:white;")
                 )
+             ),
+             div(
+               style="border: 1px solid;
+                      padding: 11px;
+                      border-radius: 8px;
+                      background-color: #fff;",
+               # --- PDF ---
+               h3("📊 Supprimer un Fichier Excel généré"),
+               
+               div(
+                 style="display:block; align-items:center; gap:15px;",
+                 selectInput("selected_excel_admin", "Choisir un Excel :", choices = NULL, width = '420px'),
+                 actionButton("delete_excel", "Supprimer",
+                              style="height:38px; margin-top:8px; background:#ef7757; color:white;")
+               )
+             )
+             
              ),
              
              hr(),
