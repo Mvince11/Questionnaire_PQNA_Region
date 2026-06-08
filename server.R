@@ -1,5 +1,8 @@
 server <- function(input, output, session) {
   
+  login_image <- reactiveVal("neoterra-def01-f2a34f08.webp")
+  login_title <- reactiveVal("Néo Terra")
+  login_subtitle <- reactiveVal("Demain devient possible")
   current_page <- reactiveVal("intro")
   completed_themes <- reactiveVal(character())  # stocke les noms des thèmes complétés
   answers <- reactiveValues()
@@ -196,65 +199,57 @@ server <- function(input, output, session) {
       return(
         mainPanel(width=12,
                   id="identification",
-          style = "
-      display:flex;
-      height:100vh;          /* pleine hauteur réelle */
-      width:100%;
-      margin:0;
-      padding:0;
-      overflow:hidden;       /* supprime toute scrollbar */
-      margin-top:-20px;
-    ",
-          
-          # ---- COLONNE GAUCHE ----
-          div(
-            style = "
-        flex:1;
+                  style = "
         display:flex;
-        flex-direction:column;
-        justify-content:center;
-        align-items:center;
-        padding:0;
+        height:100vh;
+        width:100%;
         margin:0;
+        padding:0;
+        overflow:hidden;
+        margin-top:-20px;
       ",
-            
-            h2("Identification",
-               style="color:#292574; font-weight:bold; margin-bottom:30px; font-family:marianne;"
-            ),
-            
-            div(
-              style="display:inline-block; text-align:left;",
-              
-              textInput("nom", "Nom :", placeholder = "Votre nom"),
-              textInput("prenom", "Prénom :", placeholder = "Votre prénom"),
-              textInput("structure", "Structure :", placeholder = "Nom de votre structure"),
-              textInput("email", "Adresse mail :", placeholder = "Votre adresse mail"),
-              textInput("fonction", "Fonction :", placeholder = "Votre fonction"),
-              textInput("co_users", "Co‑utilisateurs :", placeholder = "Nom, prénom, structure…"),
-              
-              actionButton(
-                "login_btn", "Se connecter",
-                style="margin-top:20px; width:100%; background-color:#ef7757; color:white;
-                 border:none; padding:10px; border-radius:6px; font-size:1.4rem;"
-              )
-            )
-          ),
-          
-          # ---- COLONNE DROITE : IMAGE PLEINE HAUTEUR ----
-          div(
-            style = "
-            flex:1;
-            position:relative; 
-            background-image:url('neoterra-def01-f2a34f08.webp');
-            background-size:cover;        /* couvre toute la zone */
-            background-position:center;   /* cadrage propre */
-            background-repeat:no-repeat;
-            height:100%;
-            margin:0;
-            padding:0;
-          ",
-            div(
-              style = "
+                  
+                  # COLONNE GAUCHE
+                  div(
+                    style = "
+          flex:1;
+          display:flex;
+          flex-direction:column;
+          justify-content:center;
+          align-items:center;
+        ",
+                    h2("Identification",
+                       style="color:#292574; font-weight:bold; margin-bottom:30px; font-family:marianne;"
+                    ),
+                    div(
+                      style="display:inline-block; text-align:left;",
+                      textInput("nom", "Nom :", placeholder = "Votre nom"),
+                      textInput("prenom", "Prénom :", placeholder = "Votre prénom"),
+                      textInput("structure", "Structure :", placeholder = "Nom de votre structure"),
+                      textInput("email", "Adresse mail :", placeholder = "Votre adresse mail"),
+                      textInput("fonction", "Fonction :", placeholder = "Votre fonction"),
+                      textInput("co_users", "Co‑utilisateurs :", placeholder = "Nom, prénom, structure…"),
+                      actionButton(
+                        "login_btn", "Se connecter",
+                        style="margin-top:20px; width:100%; background-color:#ef7757; color:white;
+                   border:none; padding:10px; border-radius:6px; font-size:1.4rem;"
+                      )
+                    )
+                  ),
+                  
+                  # COLONNE DROITE : IMAGE + TEXTE DYNAMIQUE
+                  div(
+                    style = paste0("
+          flex:1;
+          position:relative;
+          background-image:url('", login_image(), "');
+          background-size:cover;
+          background-position:center;
+          background-repeat:no-repeat;
+          height:100%;
+        "),
+                    div(
+                      style = "
             position:absolute;
             top:50%;
             left:50%;
@@ -266,14 +261,13 @@ server <- function(input, output, session) {
             text-shadow:0 2px 8px rgba(0,0,0,0.4);
             width:80%;
           ",
-              div("Néo Terra", style="font-size:70px; font-weight:bolder;"),
-              br(),
-              div("Demain devient possible", style="font-size:30px;")
-            )
-          )
+                      div(login_title(), style="font-size:70px; font-weight:bolder;"),
+                      br(),
+                      div(login_subtitle(), style="font-size:30px;")
+                    )
+                  )
         )
       )
-      
     } else {
       
         
@@ -1550,5 +1544,27 @@ server <- function(input, output, session) {
     showNotification("Fichier Excel supprimé avec succès", type = "message")
   })
   
+  observe({
+    updateTextInput(session, "admin_login_title", value = login_title())
+    updateTextInput(session, "admin_login_subtitle", value = login_subtitle())
+  })
   
+  
+  observeEvent(input$apply_login_custom, {
+    
+    if (!is.null(input$admin_login_title))
+      login_title(input$admin_login_title)
+    
+    if (!is.null(input$admin_login_subtitle))
+      login_subtitle(input$admin_login_subtitle)
+    
+    if (!is.null(input$admin_login_image)) {
+      file.copy(input$admin_login_image$datapath,
+                file.path("www", input$admin_login_image$name),
+                overwrite = TRUE)
+      login_image(input$admin_login_image$name)
+    }
+    
+    showNotification("Page d’accueil mise à jour", type = "message")
+  })
 }

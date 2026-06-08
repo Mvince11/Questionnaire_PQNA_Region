@@ -59,7 +59,11 @@ ui <- fluidPage(
        ),
        
        tabPanel(
-         style="background-color:#f2ecea; margin-top:-20px; padding-bottom:82px;",
+         style="background-image: url('/home-cta-seo-4d08ff8c.webp');
+                background-repeat: no-repeat;
+                background-size: cover;
+                padding-bottom:82px;
+                margin-top:-20px;",
          "Admin",
          value = "Admin",
          
@@ -74,6 +78,10 @@ ui <- fluidPage(
                style="background:#292574; color:white; border:none; margin:40px;"
              ),
              
+            div(style="border: 21px solid white;
+                        border-radius: 20px;
+                        margin-left: 50px;
+                        margin-right: 50px;",
              h2("Mode administrateur", style="font-family:Marianne; font-size:40px; text-align:center;margin-bottom:60px;"),
              
             div(style="display:flex; gap:40px; flex-wrap:wrap; justify-content:center;",
@@ -108,7 +116,8 @@ ui <- fluidPage(
              )
              ),
              
-             hr(),
+            br(),
+            
             div(style="display:flex; gap:40px; flex-wrap:wrap;justify-content:center;",
              div(
                style="border: 1px solid;
@@ -142,28 +151,58 @@ ui <- fluidPage(
              )
              
              ),
-             
-             hr(),
-             
-             div(
-               style="border: 1px solid;
-                      padding: 11px;
-                      border-radius: 8px;
-                      background-color: #fff;",
-             # --- Modifier questionnaire ---
-             h3("🛠 Modifier le questionnaire"),
-             
-             div(
-               style="display:block; align-items:center; gap:15px;",
-               fileInput("new_questions", "Importer un fichier Excel de questions", buttonLabel = "Parcourir", placeholder = "Aucun fichier sélectionné" ),
-               actionButton("apply_questions", "Remplacer",
-                     style="height:38px; margin-top:-30px; background:#ef7757; color:white;")
+            
+            br(),
+            
+            div(
+              h2("Vous souhaitez changer le thème du questionnaire ainsi que les élèments graphiques s'y rapportant, c'est ici...",
+                 style="text-align:center;")
+              ),
+            
+            div(style="display:flex; gap:40px; flex-wrap:wrap;justify-content:center;",
+                div(style="border: 1px solid;
+                          padding: 11px;
+                          border-radius: 8px;
+                          background-color: #fff;
+                          ",
+                  
+                  h3("🎨 Personnalisation de la page d’accueil"),
+                  
+                  textInput("admin_login_title", "Titre principal :", value = "Néo Terra"),
+                  textInput("admin_login_subtitle", "Sous‑titre :", value = "Demain devient possible"),
+                  
+                  fileInput("admin_login_image", "Image de fond :", accept = c(".png", ".jpg", ".jpeg", ".webp"),
+                            placeholder = "Sélectionner une image", buttonLabel = "Parcourir"),
+                  
+                  actionButton("apply_login_custom", "Mettre à jour", style="background:#ef7757; color:white;",
+                               class = "btn-admin")
+                ),
+                
+                 
+                 div(
+                   style="border: 1px solid;
+                          padding: 11px;
+                          border-radius: 8px;
+                          background-color: #fff;
+                          width: 448px;
+                          margin-top: auto;
+                          margin-bottom: auto;",
+                 # --- Modifier questionnaire ---
+                 h3("🛠 Modifier le questionnaire"),
+                 
+                 div(
+                   style="display:block; align-items:center; gap:15px;",
+                   fileInput("new_questions", "Importer un fichier Excel de questions", buttonLabel = "Parcourir", placeholder = "Aucun fichier sélectionné" ),
+                   actionButton("apply_questions", "Remplacer",
+                         style="height:38px; margin-top:-30px; background:#ef7757; color:white;")
+                      )
+                    )
+                  )
                 )
-             )
+              )
             )
           )
-        )
-     ),
+         ),
      
      # 👉 FOOTER ICI
      uiOutput("footer_conditional")
