@@ -1248,6 +1248,32 @@ server <- function(input, output, session) {
   })
   
   
+  output$admin_header <- renderUI({
+    
+    req(current_page())  # sécurité
+    
+    if (current_page() != "intro") return(NULL)
+    
+    tags$div(
+      style = "
+      position:absolute;
+      right:20px;
+      top:10px;
+      z-index:2000;
+    ",
+      actionButton(
+        "admin_mode",
+        tagList(
+          tags$i(class="fas fa-user-shield", style="margin-right:8px;"),
+          "Mode administrateur"
+        ),
+        class = "btn btn-dark",
+        style = "background:#444; color:white; border:none;"
+      )
+    )
+  })
+  
+  
   observe({
     infos <- user_info()
     if (length(infos) == 0) return()
