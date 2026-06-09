@@ -53,6 +53,9 @@ display: none;
   padding:0 !important;
 }
 
+#resultats_page {
+  margin-top: -20px;
+}
 
 .mise_en_page{
   margin-left: 11%;

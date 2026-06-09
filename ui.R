@@ -287,7 +287,15 @@ ui <- fluidPage(
                            h3(
                              tagList(tags$i(class="fas fa-edit", style="margin-right:10px; color:#292574;")),
                              "Modifier le questionnaire",
-                             style="font-family:Marianne; font-size:22px; margin-bottom:20px; color:#292574;"
+                             style="font-family:Marianne; font-size:22px; margin-bottom:66px; color:#292574;"
+                           ),
+                           actionLink(
+                             "open_help_modal",
+                             tagList(
+                               tags$i(class = "fas fa-book-open", style="margin-right:8px;"),
+                               "Comment remplir le fichier Excel ?"
+                             ),
+                             style="font-weight:600; color:#292574; margin-top:15px; display:block;margin-bottom:20px;"
                            ),
                            fileInput("new_questions", "Importer un fichier Excel de questions",
                                      buttonLabel = "Parcourir", placeholder = "Aucun fichier sélectionné"),

@@ -109,7 +109,7 @@ server <- function(input, output, session) {
         # --- Container avec colonnes ---
         div(
           class = "container",
-          style = "display:flex; justify-content:space-between;width:auto; align-items:flex-start; margin:5% 5% 10%;",
+          style = "display:flex; justify-content:space-between;width:auto; align-items:center; margin:2% 2% 6%;",
           
           # Colonne gauche
           div(
@@ -161,7 +161,7 @@ server <- function(input, output, session) {
           div(
             style = "
                 position: absolute;
-                bottom: 50px;     
+                bottom: 44px;     
                 right: 30px;
                 z-index: 900;
               ",
@@ -891,7 +891,9 @@ server <- function(input, output, session) {
           gridLineInterpolation = "polygon",
           lineWidth = 0,
           tickInterval = 25,
-          labels = list(style = list(color = "#666", fontSize = "12px"))
+          labels = list(style = list(color = "#666", fontSize = "12px"),
+                        formatter = JS("function() { return this.value + '%'; }")
+          )
         ) %>%
         hc_series(
           list(
@@ -1247,7 +1249,7 @@ server <- function(input, output, session) {
     current_page(themes[1])
   })
   
-  
+  #### ObserveEvent Bouton Admin #####
   output$admin_header <- renderUI({
     
     req(current_page())  # sécurité
@@ -1287,7 +1289,7 @@ server <- function(input, output, session) {
   })
   
   
-  
+  #### ObserveEvent Création du PDF #####
   observeEvent(input$trigger_pdf, {
     
     shinyalert::shinyalert(
@@ -1308,7 +1310,7 @@ server <- function(input, output, session) {
   })
   
   
-  
+  #### Création PDF #####
   output$download_pdf <- downloadHandler(
     
     filename = function() {
@@ -1364,7 +1366,8 @@ server <- function(input, output, session) {
           gridLineInterpolation = "polygon",
           lineWidth = 0,
           tickInterval = 25,
-          labels = list(style = list(color = "#666", fontSize = "16px"))
+          labels = list(style = list(color = "#666", fontSize = "16px"),
+                        formatter = JS("function() { return this.value + '%'; }"))
         ) %>%
         hc_series(
           list(
@@ -1416,8 +1419,9 @@ server <- function(input, output, session) {
     }
   )
   
-  #### Administrateur ####
+  ### Administrateur ####
   
+  #### OberveEvent Affichage boîte de dialogue login Admin #####
   observeEvent(input$admin_mode, {
     showModal(modalDialog(
       title = "Connexion administrateur",
@@ -1429,6 +1433,7 @@ server <- function(input, output, session) {
     ))
   })
   
+  #### ObserveEvent renseignement mot de passe ####
   observeEvent(input$admin_login, {
     if (input$admin_pass != "cerema-admin") {
       showModal(modalDialog(
@@ -1443,6 +1448,7 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "tabs", selected = "Admin")
   })
   
+  #### Sortie choix liste pdf ####
   output$liste_pdfs <- renderTable({
     files <- list.files("Rapports", pattern = "\\.pdf$", full.names = TRUE)
     data.frame(
@@ -1451,6 +1457,7 @@ server <- function(input, output, session) {
     )
   })
   
+  #### Sortie choix liste excel ####
   output$liste_excels <- renderTable({
     files <- list.files("Reponses", pattern = "\\.xlsx$", full.names = TRUE)
     data.frame(
@@ -1593,4 +1600,65 @@ server <- function(input, output, session) {
     
     showNotification("Page d’accueil mise à jour", type = "message")
   })
+  
+  observeEvent(input$open_help_modal, {
+    showModal(modalDialog(
+      title = tagList(
+        tags$i(class="fas fa-info-circle", style="margin-right:10px;"),
+        "Comment remplir le fichier Excel du questionnaire"
+      ),
+      size = "l",
+      easyClose = TRUE,
+      footer = modalButton("Fermer"),
+      
+      tags$div(
+        style="font-size:16px; line-height:1.6;",
+        
+        tags$h4("📌 Champs obligatoires"),
+        tags$ul(
+          tags$li(tags$b("Numero : "), "identifiant unique (ex : 1, 1.1, 2, 2.1, 2.2, 3…)"),
+          tags$li(tags$b("Parent: "), "se rapporte à la validation d'une question précédente (ex : si question 1 validée, question 1.1 s'affiche"),
+          tags$li(tags$b("Condition : "), "Condition pour que la question s'affiche (ex : L'affichage de la question 1.1 (enfant de la question 1)
+                  est conditionnée par le choix de la réponse 'Avancé' dans la question 1 (parent de la question 1.1) )"),
+          tags$li(tags$b("Theme : "), "nom du thème (ex : Eau, Biodiversité…). A renseigner pour chaque question qui compose le thème"),
+          tags$li(tags$b("Objectif : "), "nom de l'objectif (ex : 1.1 Retrouver partout de l’eau en quantité et de bonne qualité).
+                   A renseigner pour chaque question qui compose l'objectif"),
+          tags$li(tags$b("Questions : "), "texte affiché dans le questionnaire"),
+          tags$li(tags$b("Reponses :"), "réponses possibles pour la question (ex : Pas du tout;En réflexion;En place; Avancé; Je ne sais pas; Non concerné).
+                  Les réponses sont dans une seule case séparées par ;"),
+          tags$li(tags$b("Style :"), "permet de donner le style aux réponses (ex : textarea (zone de texte),
+                  radio (bouton à cocher), select (liste déroulante), checkbox (boîte à cocher)"),
+          tags$li(tags$b("Choix : "), "Une ou plusieurs réponses possibles par question (ex : Mono (une seule réponse), Multi (plusieurs)"),
+          tags$li(tags$b("Note : "), "note correspondante à chaque réponse aux questions (ex : 0;1;2;3;-;-)"),
+          tags$li(tags$b("TexteTheme :"), "texte qui introduit chaque thème. A renseigner une seule fois à la 1ère question du thème")
+        ),
+        
+        tags$h4("📌 Règles importantes"),
+        tags$ul(
+          tags$li("Aucun doublon dans ", tags$b("id_question")),
+          tags$li("Ne pas laisser de colonnes vides"),
+          tags$li("Respecter l’orthographe exacte des types : ", tags$code("text"), ", ", tags$code("select"), ", ", tags$code("textarea")),
+          tags$li("Pour les select : séparer les options par des points-virgules")
+        ),
+        
+        tags$h4("📌 Exemple de ligne correcte"),
+        tags$pre("
+id_question | theme | question | type     | options
+Q1          | Eau   | Votre commune dispose-t-elle d’un schéma directeur ? | select | Oui;Non;En cours
+Q2          | Eau   | Commentaire | textarea |
+      "),
+        
+        tags$h4("📥 Télécharger un modèle Excel"),
+        tags$p(
+          tags$a(
+            href = "modele_questionnaire.xlsx",
+            target = "_blank",
+            "➡️ Télécharger le modèle officiel",
+            style="font-weight:600; color:#ef7757;"
+          )
+        )
+      )
+    ))
+  })
+  
 }
