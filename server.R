@@ -1428,7 +1428,7 @@ server <- function(input, output, session) {
       passwordInput("admin_pass", "Mot de passe :"),
       footer = tagList(
         modalButton("Annuler"),
-        actionButton("admin_login", "Se connecter")
+        actionButton("admin_login", "Se connecter", style="color:white; background-color:#ef7757;border-color:#ef7757;")
       )
     ))
   })
@@ -1504,7 +1504,7 @@ server <- function(input, output, session) {
     
     # Vérification minimale
     required_cols <- c("Theme", "Objectif", "Numero", "Questions", "Style", "Reponses", "Parent", "Condition",
-                        "Textetheme", "Affichage", "Remplace", "Choix", "Score","Note", "Observation")
+                        "Textetheme", "Choix", "Score","Note", "Observation")
     # Convertir la colonne Reponses en liste
     if ("Reponses" %in% names(new_q)) {
       new_q$reponses <- lapply(new_q$Reponses, function(x) {
@@ -1604,7 +1604,7 @@ server <- function(input, output, session) {
   observeEvent(input$open_help_modal, {
     showModal(modalDialog(
       title = tagList(
-        tags$i(class="fas fa-info-circle", style="margin-right:10px;"),
+        tags$i(class="fas fa-info-circle", style="margin-right:10px;fon-size:x-large;"),
         "Comment remplir le fichier Excel du questionnaire"
       ),
       size = "l",
@@ -1614,49 +1614,92 @@ server <- function(input, output, session) {
       tags$div(
         style="font-size:16px; line-height:1.6;",
         
-        tags$h4("📌 Champs obligatoires"),
+        tags$h4(
+          tagList(
+            tags$i(class="fas fa-check-circle", style="margin-right:8px; color:#ef7757;"),
+            "Champs obligatoires"
+          )
+        ),
         tags$ul(
-          tags$li(tags$b("Numero : "), "identifiant unique (ex : 1, 1.1, 2, 2.1, 2.2, 3…)"),
-          tags$li(tags$b("Parent: "), "se rapporte à la validation d'une question précédente (ex : si question 1 validée, question 1.1 s'affiche"),
-          tags$li(tags$b("Condition : "), "Condition pour que la question s'affiche (ex : L'affichage de la question 1.1 (enfant de la question 1)
-                  est conditionnée par le choix de la réponse 'Avancé' dans la question 1 (parent de la question 1.1) )"),
-          tags$li(tags$b("Theme : "), "nom du thème (ex : Eau, Biodiversité…). A renseigner pour chaque question qui compose le thème"),
-          tags$li(tags$b("Objectif : "), "nom de l'objectif (ex : 1.1 Retrouver partout de l’eau en quantité et de bonne qualité).
-                   A renseigner pour chaque question qui compose l'objectif"),
-          tags$li(tags$b("Questions : "), "texte affiché dans le questionnaire"),
-          tags$li(tags$b("Reponses :"), "réponses possibles pour la question (ex : Pas du tout;En réflexion;En place; Avancé; Je ne sais pas; Non concerné).
-                  Les réponses sont dans une seule case séparées par ;"),
-          tags$li(tags$b("Style :"), "permet de donner le style aux réponses (ex : textarea (zone de texte),
-                  radio (bouton à cocher), select (liste déroulante), checkbox (boîte à cocher)"),
-          tags$li(tags$b("Choix : "), "Une ou plusieurs réponses possibles par question (ex : Mono (une seule réponse), Multi (plusieurs)"),
-          tags$li(tags$b("Note : "), "note correspondante à chaque réponse aux questions (ex : 0;1;2;3;-;-)"),
-          tags$li(tags$b("TexteTheme :"), "texte qui introduit chaque thème. A renseigner une seule fois à la 1ère question du thème")
+          tags$li(tags$b("Numéro : "), 
+                  "Identifiant unique de la question (ex : 1, 1.1, 2, 2.1, 2.2, 3…). 
+         Il permet d’organiser les questions et de gérer les relations parent/enfant."),
+          
+          tags$li(tags$b("Parent : "), 
+                  "Numéro de la question parente. 
+         Une question enfant (ex : 1.1) ne s’affiche que si la question parente (ex : 1) est validée."),
+          
+          tags$li(tags$b("Condition : "), 
+                  "Condition d’affichage de la question. 
+         Exemple : la question 1.1 ne s’affiche que si, dans la question 1, la réponse choisie est 'Avancé'."),
+          
+          tags$li(tags$b("Thème : "), 
+                  "Nom du thème auquel appartient la question (ex : Eau, Biodiversité…). 
+         À renseigner pour chaque question du thème."),
+          
+          tags$li(tags$b("Objectif : "), 
+                  "Nom de l’objectif associé (ex : 1.1 Retrouver partout de l’eau en quantité et de bonne qualité). 
+         À renseigner pour chaque question liée à cet objectif."),
+          
+          tags$li(tags$b("Questions : "), 
+                  "Texte complet de la question affichée dans le questionnaire."),
+          
+          tags$li(tags$b("Réponses : "), 
+                  "Liste des réponses possibles, séparées par des points‑virgules (ex : Pas du tout;En réflexion;En place;Avancé;Je ne sais pas;Non concerné). 
+         Toutes les réponses doivent tenir dans une seule cellule."),
+          
+          tags$li(tags$b("Style : "), 
+                  "Type de champ utilisé pour répondre : 
+         textarea (zone de texte), 
+         radio (choix unique), 
+         select (liste déroulante), 
+         checkbox (choix multiples)."),
+          
+          tags$li(tags$b("Choix : "), 
+                  "Nombre de réponses autorisées : 
+         Mono (une seule réponse), 
+         Multichoix (plusieurs réponses possibles), 
+         Multichoix 2Max (maximum 2 réponses), 
+         Multichoix 3Max (maximum 3 réponses)."),
+          
+          tags$li(tags$b("Note : "), 
+                  "Valeurs numériques associées à chaque réponse, séparées par des points‑virgules (ex : 0;1;2;3;-;-). 
+         L’ordre des notes doit correspondre exactement à l’ordre des réponses."),
+          
+          tags$li(tags$b("TexteTheme : "), 
+                  "Texte d’introduction du thème. 
+         À renseigner uniquement sur la première question du thème."),
+          
+          tags$li(tags$b("Observation : "), 
+                  "Indique si la question est obligatoire ou non (ex : obligatoire / pas obligatoire).")
+          
         ),
         
-        tags$h4("📌 Règles importantes"),
+        tags$h4(
+          tagList(
+            tags$i(class="fas fa-exclamation-circle", style="margin-right:8px; color:#ef7757;"),
+            "Règles importantes"
+          )
+        ),
         tags$ul(
-          tags$li("Aucun doublon dans ", tags$b("id_question")),
+          tags$li("Aucun doublon dans ", tags$b("Question")),
           tags$li("Ne pas laisser de colonnes vides"),
-          tags$li("Respecter l’orthographe exacte des types : ", tags$code("text"), ", ", tags$code("select"), ", ", tags$code("textarea")),
-          tags$li("Pour les select : séparer les options par des points-virgules")
+          tags$li("Respecter l’orthographe exacte des types : ", tags$code("radio"), ", ", tags$code("select"), ", ", tags$code("textarea"), ", ", tags$code("checkbox")),
+          tags$li("Pour les Questions ou Reponses : séparer les options par des points-virgules")
         ),
         
-        tags$h4("📌 Exemple de ligne correcte"),
-        tags$pre("
-id_question | theme | question | type     | options
-Q1          | Eau   | Votre commune dispose-t-elle d’un schéma directeur ? | select | Oui;Non;En cours
-Q2          | Eau   | Commentaire | textarea |
-      "),
         
-        tags$h4("📥 Télécharger un modèle Excel"),
-        tags$p(
-          tags$a(
-            href = "modele_questionnaire.xlsx",
-            target = "_blank",
-            "➡️ Télécharger le modèle officiel",
-            style="font-weight:600; color:#ef7757;"
+        tags$a(
+          href = "question_autodiag.xlsx",
+          target = "_blank",
+          style = "text-decoration:none; color:inherit;",
+          div(
+            style = "display:flex; align-items:center; margin-top:25px;",
+            tags$i(class = "fas fa-download", style = "margin-right:10px; font-size:22px; color:#ef7757;"),
+            tags$h4("Télécharger un modèle Excel", style="margin:0;")
           )
         )
+        
       )
     ))
   })
