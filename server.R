@@ -846,25 +846,48 @@ server <- function(input, output, session) {
     
     
     
-    scores <- input$scores_par_theme
-    if (is.null(scores)) return()
+    df_scores <- reactive({
+      req(reponses_df_r())
+      
+      reponses_df_r() %>%
+        left_join(
+          questions_list %>% select(Numero, Theme),
+          by = "Numero"
+        ) %>%
+        filter(!Reponse %in% c("Je ne sais pas", "Non concerné")) %>%  # exclure non notés
+        group_by(Theme) %>%
+        summarise(
+          score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100, 1),
+          .groups = "drop"
+        )
+    })
     
-    df <- data.frame(
-      theme = names(scores),
-      value = as.numeric(unlist(scores))
-    )
+    df_details <- reactive({
+      req(reponses_df_r())
+      
+      reponses_df_r() %>%
+        left_join(
+          questions_list %>% select(Numero, Theme, Objectif),
+          by = "Numero"
+        ) %>%
+        filter(!Reponse %in% c("Je ne sais pas", "Non concerné")) %>%
+        group_by(Theme, Objectif) %>%
+        summarise(
+          score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100, 1),
+          .groups = "drop"
+        )
+    })
     
-    df$value <- round(df$value / 30 * 100, 1)
-    df_local <- df
-    df_scores(df_local)
     
     output$kiviat <- renderHighchart({
+      
+      df <- df_scores()
       
       # --- Construction du radar (ton code existant) ---
       highchart() %>%
         hc_chart(polar = TRUE, type = "line") %>%
         hc_xAxis(
-          categories = df$theme,
+          categories = df$Theme,
           tickmarkPlacement = "on",
           labels = list(
             distance = 30,
@@ -898,7 +921,7 @@ server <- function(input, output, session) {
         hc_series(
           list(
             name = "Score",
-            data = df$value,
+            data = df$score_pct,
             pointPlacement = "on",
             color = "#0055A4",
             lineWidth = 3,
@@ -961,19 +984,21 @@ server <- function(input, output, session) {
 
 #### Variables pour résultats ambitions et objectifs ####
   df_details <- reactive({
-    req(reponses_df_r())   # garantit que le DF existe
+    req(reponses_df_r())
     
-    reponses_df_r() %>%    # ⚠️ les parenthèses sont essentielles
+    reponses_df_r() %>%
       left_join(
         questions_list %>% select(Numero, Theme, Objectif),
         by = "Numero"
       ) %>%
+      filter(!Reponse %in% c("Je ne sais pas", "Non concerné")) %>%   # ← indispensable
       group_by(Theme, Objectif) %>%
       summarise(
         score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100),
         .groups = "drop"
       )
   })
+  
   
 #### identité #####
   identite <- reactive({
@@ -1331,15 +1356,25 @@ server <- function(input, output, session) {
       
       library(highcharter)
       library(htmlwidgets)
-      library(webshot)
+      library(webshot2)
       
-      df <- df_scores()
+      df <- reponses_df_r() %>%
+        left_join(
+          questions_list %>% select(Numero, Theme),
+          by = "Numero"
+        ) %>%
+        filter(!Reponse %in% c("Je ne sais pas", "Non concerné")) %>%
+        group_by(Theme) %>%
+        summarise(
+          score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100, 1),
+          .groups = "drop"
+        )
       
       # --- Reconstruire le radar ---
       hc <- highchart() %>% 
         hc_chart(polar = TRUE, type = "line") %>%
         hc_xAxis(
-          categories = df$theme,
+          categories = df$Theme,
           tickmarkPlacement = "on",
           labels = list(
             distance = 30,
@@ -1372,7 +1407,7 @@ server <- function(input, output, session) {
         hc_series(
           list(
             name = "Score",
-            data = df$value,
+            data = df$score_pct,
             pointPlacement = "on",
             color = "#0055A4",
             lineWidth = 3,
@@ -1394,7 +1429,7 @@ server <- function(input, output, session) {
       
       # 2) capture PNG
       tmp_png <- tempfile(fileext = ".png")
-      webshot(tmp_html, tmp_png, vwidth = 900, vheight = 700, delay = 2)
+      webshot2::webshot(tmp_html, tmp_png, vwidth = 900, vheight = 700)
       
       # --- Chemin compatible LaTeX ---
       radar_path_safe <- normalizePath(tmp_png, winslash = "/", mustWork = TRUE)

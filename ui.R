@@ -49,7 +49,7 @@ ui <- fluidPage(
        
        tabPanel(
          style="
-                background-image: url('/home-cta-seo-4d08ff8c.webp');
+                background-image: url('home-cta-seo-4d08ff8c.webp');
                 background-repeat: no-repeat;
                 background-size: cover;
                 padding-bottom:82px;
