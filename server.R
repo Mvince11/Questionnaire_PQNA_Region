@@ -11,6 +11,31 @@ server <- function(input, output, session) {
   df_scores <- reactiveVal(NULL)
   df_details_r <- reactiveVal(NULL)
   user_info <- reactiveVal(list())
+  df_objectifs <- reactive({
+    reponses_df_r() %>%
+      left_join(
+        questions_list %>% select(Numero, Theme, Objectif),
+        by = "Numero"
+      ) %>%
+      filter(!Reponse %in% c("Je ne sais pas", "Non concerné")) %>%
+      group_by(Theme, Objectif) %>%
+      summarise(
+        score_pct_objectif = round(mean(Score, na.rm = TRUE) / 3 * 100),
+        .groups = "drop"
+      )
+  })
+  
+  df_themes <- reactive({
+    df_objectifs() %>%
+      group_by(Theme) %>%
+      summarise(
+        score_pct_theme = round(mean(score_pct_objectif), 1),
+        .groups = "drop"
+      )
+  })
+  
+  
+  app_dir <- normalizePath(".", winslash = "/")
   
   
   safe_id <- function(x) {
@@ -109,7 +134,7 @@ server <- function(input, output, session) {
         # --- Container avec colonnes ---
         div(
           class = "container",
-          style = "display:flex; justify-content:space-between;width:auto; align-items:center; margin:2% 2% 6%;",
+          style = "display:flex; justify-content:space-between;width:auto; align-items:center; margin:2% 2% 6%;font-family: Marianne;",
           
           # Colonne gauche
           div(
@@ -881,7 +906,7 @@ server <- function(input, output, session) {
     
     output$kiviat <- renderHighchart({
       
-      df <- df_scores()
+      df <- df_themes()
       
       # --- Construction du radar (ton code existant) ---
       highchart() %>%
@@ -921,7 +946,7 @@ server <- function(input, output, session) {
         hc_series(
           list(
             name = "Score",
-            data = df$score_pct,
+            data = df$score_pct_theme,
             pointPlacement = "on",
             color = "#0055A4",
             lineWidth = 3,
@@ -1135,7 +1160,13 @@ server <- function(input, output, session) {
        Le graphique ci-dessous vous permet de visualiser vos forces 
        et vos axes d'amélioration.",
       style = "font-size:20px; margin-bottom:25px;"
-    )),
+    ),
+    tags$p(
+      "Vous pouvez également télécharger votre fiche complète de résultats en bas de cette page.",
+      style = "color:white; margin-left:10%; font-size:1.2em; margin-top:10px; text-decoration:underline; cursor:pointer;",
+      onclick = "document.getElementById('download_pdf').scrollIntoView({ behavior: 'smooth' });"
+    ),
+      ),
     
     # --- GRAPHIQUE ---
     div(
@@ -1334,6 +1365,10 @@ server <- function(input, output, session) {
     session$sendCustomMessage("launch-download", TRUE)
   })
   
+  is_shinyapps <- function() {
+    nzchar(Sys.getenv("SHINYAPPS_URL"))
+  }
+  
   
   #### Création PDF #####
   output$download_pdf <- downloadHandler(
@@ -1354,27 +1389,39 @@ server <- function(input, output, session) {
       horodatage <- format(Sys.time(), "%Y-%m-%d-%H-%M")
       nom_fichier <- paste0("reponses_", infos$nom, "_", infos$prenom, "_", horodatage)
       
-      library(highcharter)
-      library(htmlwidgets)
-      library(webshot2)
-      
-      df <- reponses_df_r() %>%
+      # Score par objectif
+      df_objectifs <- reponses_df_r() %>%
         left_join(
-          questions_list %>% select(Numero, Theme),
+          questions_list %>% select(Numero, Theme, Objectif),
           by = "Numero"
         ) %>%
         filter(!Reponse %in% c("Je ne sais pas", "Non concerné")) %>%
-        group_by(Theme) %>%
+        group_by(Theme, Objectif) %>%
         summarise(
-          score_pct = round(mean(Score, na.rm = TRUE) / 3 * 100, 1),
+          score_pct_objectif = round(mean(Score, na.rm = TRUE) / 3 * 100),
           .groups = "drop"
         )
+      
+      # Score global par thème (moyenne des objectifs)
+      df_themes <- df_objectifs %>%
+        group_by(Theme) %>%
+        summarise(
+          score_pct_theme = round(mean(score_pct_objectif), 1),
+          .groups = "drop"
+        )
+      
+      # Fusion pour le PDF
+      df_scores <- df_objectifs %>%
+        left_join(df_themes, by = "Theme") %>%
+        arrange(Theme, Objectif)
+      
+      df_radar <- df_themes
       
       # --- Reconstruire le radar ---
       hc <- highchart() %>% 
         hc_chart(polar = TRUE, type = "line") %>%
         hc_xAxis(
-          categories = df$Theme,
+          categories = df_radar$Theme,
           tickmarkPlacement = "on",
           labels = list(
             distance = 30,
@@ -1407,7 +1454,7 @@ server <- function(input, output, session) {
         hc_series(
           list(
             name = "Score",
-            data = df$score_pct,
+            data = df_radar$score_pct_theme,
             pointPlacement = "on",
             color = "#0055A4",
             lineWidth = 3,
@@ -1423,34 +1470,50 @@ server <- function(input, output, session) {
         ) %>%
         hc_legend(enabled = FALSE)
       
-      # 1) widget HTML temporaire
-      tmp_html <- tempfile(fileext = ".html")
-      saveWidget(hc, tmp_html, selfcontained = TRUE)
-      
-      # 2) capture PNG
-      tmp_png <- tempfile(fileext = ".png")
-      webshot2::webshot(tmp_html, tmp_png, vwidth = 900, vheight = 700)
-      
-      # --- Chemin compatible LaTeX ---
-      radar_path_safe <- normalizePath(tmp_png, winslash = "/", mustWork = TRUE)
       
       # 3. Chemin final dans Rapports/
-      if (!dir.exists("Rapports")) dir.create("Rapports")
-      output_path <- file.path("Rapports", paste0(nom_fichier, ".pdf"))
+      # --- Dossier stable ---
+      if (!dir.exists("Rapports/tmp")) dir.create("Rapports/tmp", recursive = TRUE)
+      
+      library(webshot2)
+      library(htmlwidgets)
+      
+      tmp_html <- file.path(tempdir(), "radar.html")
+      tmp_png  <- file.path(tempdir(), "radar.png")
+      
+      saveWidget(
+        hc,
+        file = tmp_html,
+        selfcontained = TRUE
+      )
+      
+      webshot2::webshot(
+        url = tmp_html,
+        file = tmp_png,
+        vwidth = 900,
+        vheight = 700,
+        delay = 1
+      )
+      
+      radar_path_safe <- normalizePath(tmp_png, winslash = "/")
+      
       
       # --- Génération du PDF ---
+      pdf_final <- file.path("Rapports", paste0(nom_fichier, ".pdf"))
+      
       rmarkdown::render(
         input = "rapport.Rmd",
-        output_file = output_path,
+        output_file = pdf_final,
         params = list(
           radar_path = radar_path_safe,
-          df_details = df_details_r(),
+          df_themes  = df_themes,
+          df_scores  = df_scores,
           identite   = user_info()
         ),
         envir = new.env(parent = globalenv())
       )
       
-      file.copy(output_path, file, overwrite = TRUE)
+      file.copy(pdf_final, file, overwrite = TRUE)
     }
   )
   
@@ -1584,15 +1647,15 @@ server <- function(input, output, session) {
   observeEvent(input$delete_pdf, {
     req(input$selected_pdf_admin)
     
-    file_to_delete <- file.path("www/pdf", input$selected_pdf_admin)
+    dir_pdf <- file.path(app_dir, "Rapports")
+    file_to_delete <- file.path(dir_pdf, input$selected_pdf_admin)
     
     if (file.exists(file_to_delete)) {
       file.remove(file_to_delete)
     }
     
-    # Mise à jour de la liste
     updateSelectInput(session, "selected_pdf_admin",
-                      choices = list.files("www/pdf"))
+                      choices = list.files(dir_pdf))
     
     showNotification("PDF supprimé avec succès", type = "message")
   })
@@ -1600,14 +1663,15 @@ server <- function(input, output, session) {
   observeEvent(input$delete_excel, {
     req(input$selected_excel_admin)
     
-    file_to_delete <- file.path("www/excel", input$selected_excel_admin)
+    dir_excel <- file.path(app_dir, "Reponses")
+    file_to_delete <- file.path(dir_excel, input$selected_excel_admin)
     
     if (file.exists(file_to_delete)) {
       file.remove(file_to_delete)
     }
     
     updateSelectInput(session, "selected_excel_admin",
-                      choices = list.files("www/excel"))
+                      choices = list.files(dir_excel))
     
     showNotification("Fichier Excel supprimé avec succès", type = "message")
   })
@@ -1694,8 +1758,8 @@ server <- function(input, output, session) {
                   "Nombre de réponses autorisées : 
          Mono (une seule réponse), 
          Multichoix (plusieurs réponses possibles), 
-         Multichoix 2Max (maximum 2 réponses), 
-         Multichoix 3Max (maximum 3 réponses)."),
+         Multichoix 2 Max (maximum 2 réponses), 
+         Multichoix 3 Max (maximum 3 réponses)."),
           
           tags$li(tags$b("Note : "), 
                   "Valeurs numériques associées à chaque réponse, séparées par des points‑virgules (ex : 0;1;2;3;-;-). 

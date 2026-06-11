@@ -6,7 +6,8 @@ output:
 geometry: margin=1.6cm
 params:
   identite: NULL
-  df_details: NULL
+  df_scores: NULL
+  df_themes: NULL
   radar_path: NULL
 header-includes:
   - \usepackage{booktabs}
@@ -31,7 +32,8 @@ header-includes:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 id  <- params$identite
-res <- params$df_details
+res <- params$df_scores
+themes_glob <- params$df_themes
 radar_path <- params$radar_path
 ```
 
@@ -83,7 +85,7 @@ radar_path <- params$radar_path
 
 ```{r echo=FALSE, out.width="100%", Fig.Pos='H'}
 
-knitr::include_graphics(radar_path)
+knitr::include_graphics(params$radar_path)
 
 ```
 
@@ -128,11 +130,11 @@ for (th in themes) {
 
   cat("\\vspace{0.8cm}\n")
   
-  d <- res[res$Theme == th, c("Objectif", "score_pct")]
+  d <- res[res$Theme == th, c("Objectif", "score_pct_objectif")]
   colnames(d) <- c("Objectif", "Score")
-  
-  # Score global de l’ambition
-  score_ambition <- round(mean(d$Score, na.rm = TRUE))
+
+  score_ambition <- themes_glob$score_pct_theme[themes_glob$Theme == th]
+
 
   cat(
     "\\textbf{\\fontsize{10pt}{12pt}\\selectfont Ambition ",

@@ -163,7 +163,9 @@ ui <- fluidPage(
                              "Supprimer un rapport PDF généré",
                              style="font-family:Marianne; font-size:22px; margin-bottom:20px; color:#292574;"
                            ),
-                           selectInput("selected_pdf_admin", "Choisir un PDF :", choices = NULL, width = '420px'),
+                           selectInput("selected_pdf_admin", "Choisir un PDF :", 
+                                       choices = list.files(file.path(app_dir, "Rapports")),
+                                       width = '420px'),
                            actionButton("delete_pdf", "Supprimer",
                                         style="height:38px; margin-top:8px; background:#ef7757; color:white;")
                          )
@@ -216,7 +218,9 @@ ui <- fluidPage(
                              "Supprimer un fichier Excel généré",
                              style="font-family:Marianne; font-size:22px; margin-bottom:20px; color:#292574;"
                            ),
-                           selectInput("selected_excel_admin", "Choisir un Excel :", choices = NULL, width = '420px'),
+                           selectInput("selected_excel_admin", "Choisir un Excel :",
+                                       choices = list.files(file.path(app_dir, "Reponses")),
+                                       width = '420px'),
                            actionButton("delete_excel", "Supprimer",
                                         style="height:38px; margin-top:8px; background:#ef7757; color:white;")
                          )
