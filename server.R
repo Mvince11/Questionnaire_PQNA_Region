@@ -858,6 +858,8 @@ server <- function(input, output, session) {
     # ============================
     # 4) Export Excel final
     # ============================
+    Sys.setenv(TZ = "Europe/Paris")
+    
     horodatage <- format(Sys.time(), "%Y-%m-%d-%H-%M")
     
     writexl::write_xlsx(
