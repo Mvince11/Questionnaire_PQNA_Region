@@ -1375,6 +1375,8 @@ server <- function(input, output, session) {
     
     filename = function() {
       
+      Sys.setenv(TZ = "Europe/Paris")
+      
       infos <- user_info()
       horodatage <- format(Sys.time(), "%Y-%m-%d-%H-%M")
       nom_fichier <- paste0("reponses_", infos$nom, "_", infos$prenom, "_", horodatage)
@@ -1384,6 +1386,8 @@ server <- function(input, output, session) {
     
     
     content = function(file) {
+      
+      Sys.setenv(TZ = "Europe/Paris")
       
       infos <- user_info()
       horodatage <- format(Sys.time(), "%Y-%m-%d-%H-%M")
