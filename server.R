@@ -1417,87 +1417,6 @@ server <- function(input, output, session) {
       
       df_radar <- df_themes
       
-      # --- Reconstruire le radar ---
-      hc <- highchart() %>% 
-        hc_chart(polar = TRUE, type = "line") %>%
-        hc_xAxis(
-          categories = df_radar$Theme,
-          tickmarkPlacement = "on",
-          labels = list(
-            distance = 30,
-            padding = 10,
-            useHTML = TRUE,
-            formatter = JS("
-          function () {
-            var angle = this.pos * (360 / this.axis.categories.length);
-            if (angle > 330 || angle < 30) {
-              return '<span style=\"position:relative; font-size:14px; color:#000\">' + this.value + '</span>';
-            } else if (angle > 150 && angle < 210) {
-              return '<span style=\"position:relative; top:6px; font-size:14px; color:#000\">' + this.value + '</span>';
-            } else {
-              return '<span style=\"font-size:14px; color:#000\">' + this.value + '</span>';
-            }
-          }
-        ")
-          )
-        ) %>%
-        hc_yAxis(
-          min = 0, max = 100,
-          gridLineColor = "#D0D0D0",
-          gridLineWidth = 1,
-          gridLineInterpolation = "polygon",
-          lineWidth = 0,
-          tickInterval = 25,
-          labels = list(style = list(color = "#666", fontSize = "16px"),
-                        formatter = JS("function() { return this.value + '%'; }"))
-        ) %>%
-        hc_series(
-          list(
-            name = "Score",
-            data = df_radar$score_pct_theme,
-            pointPlacement = "on",
-            color = "#0055A4",
-            lineWidth = 3,
-            marker = list(enabled = TRUE, radius = 5, fillColor = "#0055A4")
-          )
-        ) %>%
-        hc_tooltip(
-          headerFormat = "",
-          pointFormat = "{point.category} : <b>{point.y}%</b>",
-          backgroundColor = "white",
-          borderColor = "#0055A4",
-          style = list(fontSize = "14px")
-        ) %>%
-        hc_legend(enabled = FALSE)
-      
-      
-      # 3. Chemin final dans Rapports/
-      # --- Dossier stable ---
-      if (!dir.exists("Rapports/tmp")) dir.create("Rapports/tmp", recursive = TRUE)
-      
-      library(webshot2)
-      library(htmlwidgets)
-      
-      tmp_html <- file.path(tempdir(), "radar.html")
-      tmp_png  <- file.path(tempdir(), "radar.png")
-      
-      saveWidget(
-        hc,
-        file = tmp_html,
-        selfcontained = TRUE
-      )
-      
-      webshot2::webshot(
-        url = tmp_html,
-        file = tmp_png,
-        vwidth = 900,
-        vheight = 700,
-        delay = 1
-      )
-      
-      radar_path_safe <- normalizePath(tmp_png, winslash = "/")
-      
-      
       # --- Génération du PDF ---
       pdf_final <- file.path("Rapports", paste0(nom_fichier, ".pdf"))
       
@@ -1505,7 +1424,7 @@ server <- function(input, output, session) {
         input = "rapport.Rmd",
         output_file = pdf_final,
         params = list(
-          radar_path = radar_path_safe,
+          df_radar   = df_radar,
           df_themes  = df_themes,
           df_scores  = df_scores,
           identite   = user_info()

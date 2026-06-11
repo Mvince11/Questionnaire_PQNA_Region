@@ -12,7 +12,7 @@ library(highcharter)
 library(webshot)
 library(shinyalert)
 library(xtable)
-library(webshot2)
+
 
 #Sys.setenv("CHROME_BIN" = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe")
 app_dir <- normalizePath(".", winslash = "/")

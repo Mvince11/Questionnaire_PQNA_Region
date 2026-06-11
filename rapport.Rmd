@@ -8,7 +8,7 @@ params:
   identite: NULL
   df_scores: NULL
   df_themes: NULL
-  radar_path: NULL
+  df_radar: NULL
 header-includes:
   - \usepackage{booktabs}
   - \usepackage{fontspec}
@@ -34,7 +34,6 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 id  <- params$identite
 res <- params$df_scores
 themes_glob <- params$df_themes
-radar_path <- params$radar_path
 ```
 
 ```{=latex}
@@ -77,15 +76,171 @@ radar_path <- params$radar_path
 
 ```{=Latex}
 % On réserve l'espace exact pour la figure
-\needspace{11cm}
+\needspace{10cm}
 
 % On force le bloc suivant à rester ici
 \par\vspace{0.2cm}
 ```
 
-```{r echo=FALSE, out.width="100%", Fig.Pos='H'}
+```{r radar, echo=FALSE, warning=FALSE, message=FALSE, fig.width=6, fig.height=6, fig.align='center', fig.env='none'}
+library(ggplot2)
+library(dplyr)
+library(stringr)
 
-knitr::include_graphics(params$radar_path)
+radar <- params$df_radar
+
+# -----------------------
+# Préparation des données
+# -----------------------
+
+n <- nrow(radar)
+
+label_distance <- 145
+
+radar <- radar %>%
+  mutate(
+    Theme = str_wrap(Theme, width = 24),
+    angle = seq(0, 2*pi, length.out = n + 1)[1:n]
+  )
+
+# Polygone des scores
+poly_df <- radar %>%
+  mutate(
+    x = score_pct_theme * sin(angle),
+    y = score_pct_theme * cos(angle)
+  )
+
+poly_df <- bind_rows(poly_df, poly_df[1, ])
+
+# Grilles polygonales
+grid_levels <- c(25, 50, 75, 100)
+
+grid_df <- bind_rows(
+  lapply(grid_levels, function(level){
+
+    data.frame(
+      level = level,
+      angle = seq(0, 2*pi, length.out = n + 1)
+    ) %>%
+      mutate(
+        x = level * sin(angle),
+        y = level * cos(angle)
+      )
+
+  })
+)
+
+# Axes radiaux
+axis_df <- radar %>%
+  mutate(
+    xend = 100 * sin(angle),
+    yend = 100 * cos(angle)
+  )
+
+# Labels des thèmes
+label_df <- radar %>%
+  mutate(
+    x = label_distance * sin(angle),
+    y = label_distance * cos(angle),
+
+    hjust = case_when(
+      x > 20  ~ 0,
+      x < -20 ~ 1,
+      TRUE    ~ 0.5
+    ),
+
+    vjust = case_when(
+      y > 90  ~ 0,
+      y < -90 ~ 1,
+      TRUE    ~ 0.5
+    )
+  )
+
+# Graduation des pourcentages
+tick_df <- data.frame(
+  level = c(25, 50, 75, 100),
+  x = 6,
+  y = c(25, 50, 75, 100)
+)
+
+# -----------------------
+# Graphique
+# -----------------------
+
+ggplot() +
+
+  # Grille polygonale
+  geom_path(
+    data = grid_df,
+    aes(x, y, group = level),
+    colour = "#D0D0D0",
+    linewidth = 0.5
+  ) +
+
+  # Axes
+  geom_segment(
+    data = axis_df,
+    aes(
+      x = 0,
+      y = 0,
+      xend = xend,
+      yend = yend
+    ),
+    colour = "#D0D0D0",
+    linewidth = 0.4
+  ) +
+
+  # Graduations
+ geom_text(
+  data = tick_df,
+  aes(x, y, label = paste0(level, "%")),
+  size = 3,
+  colour = "#666666"
+) +
+
+  # Surface
+  geom_polygon(
+    data = poly_df,
+    aes(x, y),
+    fill = "#0055A4",
+    alpha = 0.12
+  ) +
+
+  # Contour
+  geom_path(
+    data = poly_df,
+    aes(x, y),
+    colour = "#0055A4",
+    linewidth = 0.7
+  ) +
+
+  # Sommets
+  geom_point(
+    data = poly_df[-nrow(poly_df), ],
+    aes(x, y),
+    colour = "#0055A4",
+    size = 1.8
+  ) +
+
+  # Libellés
+  geom_text(
+    data = label_df,
+    aes(x, y, label = Theme),
+    size = 3.4,
+    lineheight = 0.95,
+    fontface = "plain"
+  ) +
+
+  coord_equal(
+  xlim = c(-175,175),
+  ylim = c(-175,175),
+  clip = "off"
+  ) +
+
+  xlim(-145,145) +
+  ylim(-145,145) +
+
+  theme_void()
 
 ```
 
