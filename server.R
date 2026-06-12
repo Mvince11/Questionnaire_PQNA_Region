@@ -1728,4 +1728,117 @@ server <- function(input, output, session) {
     ))
   })
   
+  ##### Validation question pour enregistrement au fur et à mesure ####
+  ###### Sauvegarde automatique des réponses #####
+  observeEvent(reactiveValuesToList(input), {
+    
+    all_inputs <- reactiveValuesToList(input)
+    q_ids <- grep("^q", names(all_inputs), value = TRUE)
+    
+    if (length(q_ids) == 0) return()
+    
+    user <- user_info()$email
+    if (is.null(user) || user == "") return()
+    
+    if (!dir.exists("Reponses")) dir.create("Reponses")
+    
+    file <- file.path("Reponses", paste0(user, ".rds"))
+    sauvegarde <- if (file.exists(file)) readRDS(file) else list()
+    
+    for (qid in q_ids) {
+      
+      # enlever le "q" devant
+      numero <- sub("^q", "", qid)   # "q1.1" → "1.1"
+      
+      # remplacer les points dans l’ID UI si nécessaire
+      qid_clean <- gsub("\\.", "_", qid)
+      
+      sauvegarde[[numero]] <- list(
+        question = numero,
+        reponse = all_inputs[[qid_clean]],
+        horodatage = Sys.time()
+      )
+    }
+    
+    saveRDS(sauvegarde, file)
+  })
+  
+  
+  
+  ###### Chargement de la progression loes de la reconnexion #####
+  progression <- reactive({
+    user <- user_info()$email
+    file <- file.path("Reponses", paste0(user, ".rds"))
+    if (file.exists(file)) readRDS(file) else list()
+  })
+  
+  
+  ###### Pré-remplissage lors de la reconnexion #####
+  observeEvent(input$numero_question, {
+    
+    sauvegarde <- progression()
+    numero <- as.character(input$numero_question)   # ex : "1.1"
+    
+    # ID réel de l’input dans l’UI
+    qid_clean <- paste0("q", gsub("\\.", "_", numero))
+    
+    if (!is.null(sauvegarde[[numero]])) {
+      updateRadioButtons(
+        session,
+        qid_clean,
+        selected = sauvegarde[[numero]]$reponse
+      )
+    }
+  })
+  
+  
+  
+  ###### Reprise automatique #####
+  prochaine_question <- reactive({
+    
+    deja <- names(progression())     # ex : "1.1", "2.1"
+    toutes <- as.character(questions_list$Numero)
+    
+    setdiff(toutes, deja)[1]
+  })
+  
+  
+  
+  
+  
+  ###### Retour à la bonne question #####
+  observeEvent(user_info()$email, {
+    
+    user <- user_info()$email
+    if (is.null(user) || user == "") return()
+    
+    q <- prochaine_question()
+    
+    updateNumericInput(session, "numero_question", value = q)
+  })
+  
+  observeEvent(user_info()$email, {
+    
+    user <- user_info()$email
+    if (is.null(user) || user == "") return()
+    
+    file <- file.path("Reponses", paste0(user, ".rds"))
+    
+    if (file.exists(file)) {
+      
+      sauvegarde <- readRDS(file)
+      
+      if (length(sauvegarde) > 0) {
+        
+        showNotification(
+          paste0("Reprise du questionnaire : vous aviez déjà répondu à ",
+                 length(sauvegarde), " question(s)."),
+          type = "message",
+          duration = 6
+        )
+      }
+    }
+  })
+  
+  
 }
